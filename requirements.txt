@@ -1,6 +1,8 @@
-aenum>=3.1.15,<4
-glfw>=2.8.0
-loguru>=0.7.2
-numpy>=1.26.4,<2.0.0
-opencv-contrib-python>=4.10.0.84
-PyOpenGL>=3.1.7
+aenum
+glfw
+loguru
+numpy>=1.26.4,<2.0.0; python_version < '3.12'
+numpy>=2.0.0; python_version > '3.11'
+opencv-contrib-python
+PyOpenGL
+PyOpenGL-accelerate; python_version < '3.12'

@@ -29,7 +29,7 @@ GLSL_PROGRAMS = {
 GLSL_PROGRAMS['vertex'].update({str(f.relative_to(ROOT_GLSL).as_posix()):
                                 str(f) for f in Path(ROOT_GLSL).rglob('*.vert')})
 
-USER_GLSL = ROOT / '_user'
+USER_GLSL = ROOT / 'user'
 USER_GLSL.mkdir(parents=True, exist_ok=True)
 if (USER_GLSL := os.getenv("JOV_GLSL", str(USER_GLSL))) is not None:
     GLSL_PROGRAMS['vertex'].update({str(f.relative_to(USER_GLSL).as_posix()):
