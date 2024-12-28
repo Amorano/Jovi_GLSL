@@ -62,7 +62,7 @@ pip install -r .\ComfyUI\custom_nodes\Jovi_GLSL\requirements.txt
 
 ### CUSTOM SHADERS
 
-You are able to add your own shaders such that they compile into nodes at ComfyUI load time. Custom shaders that are local to your machine will have a 🧙🏽‍♀️ wizard icon at the end of their name. The default location for local shaders is to search a folder in the root of Jovimetrix:
+You are able to add your own shaders such that they compile into nodes at ComfyUI load time. Custom shaders that are local to your machine will have a 🦄 (uniforn emoji) at the end of their name. The default location for local shaders is to search a folder in the root of Jovimetrix:
 
 `<ComfyUI>/custom_nodes/Jovi_GLSL/user`
 
@@ -89,7 +89,7 @@ The basic shaders for each of these programs is included in the default location
 `_.frag` and `_.vert`
 
 Shaders with a 🌈 (rainbow) icon at the end of their name are internal shaders that ship with this repository.
-Shaders with a 🦄 (unicorn) icon at the end of their name are custom user shaders loaded from the user directory.
+Shaders with a 🦄 (unicorn) icon at the end of their name are custom user shaders loaded from [the user directory](#custom-shaders).
 
 ## VERTEX SHADER
 
