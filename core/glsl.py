@@ -14,7 +14,7 @@ from loguru import logger
 from comfy.utils import ProgressBar
 
 from Jovi_GLSL import GLSL_INTERNAL, GLSL_CUSTOM, JOV_TYPE_IMAGE, \
-    comfy_message, load_file, zip_longest_fill
+    load_file, zip_longest_fill
 
 from Jovi_GLSL.core import GLSL_PROGRAMS, PTYPE, RE_VARIABLE, ROOT_GLSL, \
     IMAGE_SIZE_MIN, IMAGE_SIZE_DEFAULT, IMAGE_SIZE_MAX, \
@@ -47,26 +47,60 @@ class GLSLNodeDynamic(JOVBaseGLSLNode):
     CONTROL = []
     PARAM = []
 
+    # res, frame. framerate, time, batch, matte, edge, batch, seed
+
     @classmethod
     def INPUT_TYPES(cls) -> dict:
         original_params = super().INPUT_TYPES()
-        for ctrl in cls.CONTROL:
-            match ctrl.upper():
-                case "WH":
-                    original_params["optional"]["WH"] = ("VEC2INT", {"default": (512, 512), "mij":IMAGE_SIZE_MIN, "label": ['W', 'H']})
-                case "MATTE":
-                    original_params["optional"]["MATTE"] = ("VEC4INT", {"default": (0, 0, 0, 255), "rgb": True})
+        optional = original_params.get('optional', {})
+        if 'RES' in cls.CONTROL:
+            optional["iRes"] = ("VEC2INT", {"default": (IMAGE_SIZE_DEFAULT, IMAGE_SIZE_DEFAULT),
+                                                               "mij":IMAGE_SIZE_MIN, "label": ['W', 'H'],
+                                                               "tooltip": "Width and Height as a Vector2 Integer (x, y)"})
+
+        if 'FRAME' in cls.CONTROL:
+            optional["iFrame"] = ("INT", {"default": 0, "min": 0, "max": sys.maxsize,
+                                                                                       "tooltip": "Current frame to render"})
+
+        if 'FRAMERATE' in cls.CONTROL:
+            optional["iFrameRate"] = ("INT", {"default": 24, "min": 1, "max": 120,
+                                                                                       "tooltip": "Used to calculate frame step size and iTime"})
+
+        if 'TIME' in cls.CONTROL:
+            optional["iTime"] = ("INT", {"default": -1, "min": -1, "max": sys.maxsize,
+                                                                                       "tooltip": "Value to use directly; if > -1 will override iFrame/iFrameRate calculation."})
+
+        if 'BATCH' in cls.CONTROL:
+            optional["batch"] = ("INT", {"default": 0, "min": 0, "max": sys.maxsize,
+                                                                                       "tooltip": "Number of frames to generate. 0 (continuous mode) means continue from the last queue generating the next single frame based on iFrameRate. In the shader this will be the index of the batch iteration or 0."})
+
+        if 'MATTE' in cls.CONTROL:
+            optional["matte"] = ("VEC4INT", {"default": (0, 0, 0, 255),
+                                                                "rgb": True,
+                                                                "tooltip": "Define a background color for padding, if necessary. This is useful when images do not fit perfectly into the designated area and need a filler color"})
+
+        if 'EDGE' in cls.CONTROL:
+            optional["edge_x"] = (EnumEdgeWrap._member_names_, {"default": EnumEdgeWrap.CLAMP.name,
+                                                                                   "tooltip": "Clamp, Wrap or Mirror the Image Edge"})
+            optional["edge_y"] = (EnumEdgeWrap._member_names_, {"default": EnumEdgeWrap.CLAMP.name,
+                                                                                   "tooltip": "Clamp, Wrap or Mirror the Image Edge"})
+        else:
+            if 'EDGEX' in cls.CONTROL:
+                optional["edge_x"] = (EnumEdgeWrap._member_names_, {"default": EnumEdgeWrap.CLAMP.name,
+                                                                                       "tooltip": "Clamp, Wrap or Mirror the Image Edge"})
+            if 'EDGEY' in cls.CONTROL:
+                optional["edge_y"] = (EnumEdgeWrap._member_names_, {"default": EnumEdgeWrap.CLAMP.name,
+                                                                                       "tooltip": "Clamp, Wrap or Mirror the Image Edge"})
+
+        if 'SEED' in cls.CONTROL:
+            optional["seed"] = ("INT", {"default": 0, "min": 0, "max": sys.maxsize,
+                                                                                       "tooltip": "Number of frames to generate. 0 (continuous mode) means continue from the last queue generating the next single frame based on iFrameRate."})
+
+
         """
         'MODE': (EnumScaleMode._member_names_, {"default": EnumScaleMode.MATTE.name})
         'SAMPLE': (EnumInterpolation._member_names_, {"default": EnumInterpolation.LANCZOS4.name})
-        'EDGE_X': (EnumEdgeWrap._member_names_, {"default": EnumEdgeWrap.CLAMP.name})
-        'EDGE_Y': (EnumEdgeWrap._member_names_, {"default": EnumEdgeWrap.CLAMP.name})
         """
-
-        opts = original_params.get('optional', {})
-        opts.update({
-            'FRAGMENT': ("STRING", {"default": cls.FRAGMENT}),
-        })
 
         # parameter list first...
         data = {}
@@ -124,7 +158,8 @@ class GLSLNodeDynamic(JOVBaseGLSLNode):
                 params["tooltip"] = tooltip
             data[name] = (type_name, params,)
 
-        data.update(opts)
+        optional['FRAGMENT'] = ("STRING", {"default": cls.FRAGMENT})
+        data.update(optional)
         original_params['optional'] = data
         return original_params
 
@@ -135,28 +170,29 @@ class GLSLNodeDynamic(JOVBaseGLSLNode):
     def __init__(self, *arg, **kw) -> None:
         super().__init__(*arg, **kw)
         self.__glsl = None
-        self.__delta = 0
-        # current frame, if we are in batch mode, this will advance
-        self.__frame = 0
 
     def run(self, ident, **kw) -> Tuple[torch.Tensor]:
-        # batch is a single value entry -- drives everyone else.
-        batch = parse_param(kw, 'BATCH', EnumConvertType.INT, 0, 0, 1048576)[0]
-        batch = [batch] * max(1, batch)
-
-        iFrame = parse_param(kw, 'FRAME', EnumConvertType.FLOAT, 0)
-        iFrameRate = parse_param(kw, 'FPS', EnumConvertType.INT, 24)
-        iResolution = parse_param(kw, 'WH', EnumConvertType.VEC2INT,
+        # IRES, MATTE, EDGE, IFRAME, IFRAMERATE, ITIME, BATCH, SEED
+        iResolution = parse_param(kw, 'iRes', EnumConvertType.VEC2INT,
                                   [(IMAGE_SIZE_DEFAULT, IMAGE_SIZE_DEFAULT)],
                                   IMAGE_SIZE_MIN, IMAGE_SIZE_MAX)
-        bgcolor = parse_param(kw, 'MATTE', EnumConvertType.VEC4INT, [(0, 0, 0, 255)], 0, 255)
 
-        #edge_x = parse_param(kw, 'EDGE_X', EnumEdgeWrap, EnumEdgeWrap.CLAMP.name)[0]
-        #edge_y = parse_param(kw, 'EDGE_Y', EnumEdgeWrap, EnumEdgeWrap.CLAMP.name)[0]
-        #edge = (edge_x, edge_y)
+        matte = parse_param(kw, 'matte', EnumConvertType.VEC4INT, [(0, 0, 0, 255)], 0, 255)
+
+        edge_x = parse_param(kw, 'edge_x', EnumEdgeWrap, EnumEdgeWrap.CLAMP.name)
+        edge_y = parse_param(kw, 'edge_y', EnumEdgeWrap, EnumEdgeWrap.CLAMP.name)
+        edge = [(edge_x[idx], edge_y[idx]) for idx in range(len(edge_x))]
+
+        iFrame = parse_param(kw, 'iFrame', EnumConvertType.FLOAT, 0)
+        iFrameRate = parse_param(kw, 'iFrameRate', EnumConvertType.INT, 24)
+        iTime = parse_param(kw, 'iTime', EnumConvertType.INT, -1)
+
+        # batch is a single value entry -- drives everyone else.
+        batch = parse_param(kw, 'batch', EnumConvertType.INT, 0, 0, 1048576)[0]
+        seed = parse_param(kw, 'seed', EnumConvertType.INT, 0)
 
         variables = kw.copy()
-        for k in ['BATCH', 'FRAME', 'FPS', 'WH', 'MATTE']:
+        for k in ['iRes', 'iFrame', 'iFrameRate', 'iTime', 'matte', 'edge_x', 'edge_y', 'batch', 'seed']:
             variables.pop(k, None)
 
         if self.__glsl is None:
@@ -164,7 +200,6 @@ class GLSLNodeDynamic(JOVBaseGLSLNode):
                 vertex = getattr(self, 'VERTEX', kw.pop('VERTEX', None))
                 fragment = getattr(self, 'FRAGMENT', kw.pop('FRAGMENT', None))
             except Exception as e:
-                comfy_message(ident, "jovi-glsl-error", {"id": ident, "e": str(e)})
                 logger.error(self.NAME)
                 logger.error(e)
                 return
@@ -176,17 +211,20 @@ class GLSLNodeDynamic(JOVBaseGLSLNode):
 
         # if the batch == 0 then we want an automagic frame step
         if batch == 0:
+            iTime = [iFrame[0] / iFrameRate[0]]
+        else:
             start_frame = iFrame[0]
-            for x in range(len(batch)):
+            for x in range(batch):
                 iFrame.append(start_frame + x)
             iTime = [frame/rate for (frame, rate) in list(zip_longest_fill(iFrame, iFrameRate))]
-        else:
-            iTime = [iFrame[0] / iFrameRate[0]]
 
         images = []
-        params = list(zip_longest_fill(batch, iTime, iFrame, iResolution, bgcolor))
+        # iResolution, iFrame, iFrameRate, iTime, iSeed
+        params = list(zip_longest_fill(iResolution, iFrame, iFrameRate, iTime, matte, edge, seed))
         pbar = ProgressBar(len(params))
-        for idx, (batch, iTime, iFrame, iResolution, bgcolor) in enumerate(params):
+        #logger.debug(f"batch size {batch} :: param count {len(params)}")
+        #logger.debug(params)
+        for idx, (iResolution, iFrame, iFrameRate, iTime, matte, edge, seed) in enumerate(params):
             vars = {}
             firstImage = None
             for k, val in variables.items():
@@ -195,17 +233,25 @@ class GLSLNodeDynamic(JOVBaseGLSLNode):
                 if isinstance(vars[k], (torch.Tensor,)):
                     vars[k] = vars[k][idx % len(val)]
                     vars[k] = image_convert(tensor2cv(vars[k]), 4)
-                    if firstImage is None and 'WH' not in self.CONTROL:
+                    if firstImage is None and 'iRes' not in self.CONTROL:
                         firstImage = True #vars[k].shape[:2][::-1]
                         iResolution = vars[k].shape[:2][::-1]
 
-            vars['bgcolor'] = bgcolor
+            coreVar = {
+                'iResolution': iResolution,
+                'iFrame': iFrame,
+                'iFrameRate': iFrameRate,
+                'iTime': iTime,
+                'batch': idx,
+                'matte': matte,
+                'edge': edge,
+                'seed': seed
+            }
+            #logger.debug(coreVar)
+            #logger.debug(vars)
 
-            img = self.__glsl.render(iTime, iFrame, iResolution, **vars)
-            images.append(cv2tensor_full(img, bgcolor))
-
-            # self.__delta += self.__glsl.step
-            comfy_message(ident, "jovi-glsl-time", {"id": ident, "t": self.__delta})
+            img = self.__glsl.render(coreVar, **vars)
+            images.append(cv2tensor_full(img, matte))
             pbar.update_absolute(idx)
         return [torch.stack(i) for i in zip(*images)]
 
@@ -281,8 +327,8 @@ def import_dynamic() -> Tuple[str,...]:
             "FRAGMENT": shader,
             "PARAM": meta.get('_', []),
             "CONTROL": [x.upper().strip() for x in meta.get('control', "").split(",") if len(x) > 0],
-            "PASS": [x.strip() for x in meta.get('pass', "").split(",") if len(x) > 0],
-            "OUTPUT": [x.strip() for x in meta.get('output', "").split(",") if len(x) > 0],
+            #"PASS": [x.strip() for x in meta.get('pass', "").split(",") if len(x) > 0],
+            #"OUTPUT": [x.strip() for x in meta.get('output', "").split(",") if len(x) > 0],
             "SORT": sort_order,
         })
 

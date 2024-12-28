@@ -4,7 +4,7 @@ GLSL Shader
 """
 
 import sys
-from typing import Tuple
+from typing import Any, Dict, Tuple
 from enum import Enum, EnumMeta as EnumType
 
 import cv2
@@ -76,7 +76,6 @@ class GLSLShader:
         self.__glsl_manager.register_shader(node, self)
 
         self.__size: Tuple[int, int] = (IMAGE_SIZE_MIN, IMAGE_SIZE_MIN)
-        self.__bgcolor = (0, 0, 0, 1.)
         self.__textures = {}
         self.__uniform_state = {}
         self.__texture_hashes = {}
@@ -126,6 +125,7 @@ class GLSLShader:
                 logger.debug("fragment program is empty. using default.")
                 fragment = PROG_FRAGMENT
             fragment_raw = PROG_HEADER + fragment + PROG_FOOTER
+
             fragment_shader = gl.glCreateShader(gl.GL_FRAGMENT_SHADER)
             gl.glShaderSource(fragment_shader, fragment_raw)
             gl.glCompileShader(fragment_shader)
@@ -150,10 +150,10 @@ class GLSLShader:
             gl.glUseProgram(self.__program)
 
             # Setup uniforms
-            statics = ['iResolution', 'iTime', 'iFrameRate', 'iFrame']
+            statics = ['iResolution', 'iFrame', 'iFrameRate', 'iTime', 'iBatch', 'iSeed']
             for s in statics:
-                if (val := gl.glGetUniformLocation(self.__program, s)) > -1:
-                    self.__shaderVar[s] = val
+                val = gl.glGetUniformLocation(self.__program, s)
+                self.__shaderVar[s] = val
 
             logger.debug("uniforms initialized")
 
@@ -222,22 +222,35 @@ class GLSLShader:
         except:
             pass
 
-    def render(self, iTime:float=0., iFrame:int=0,
-               iResolution:Tuple[float,...]=(IMAGE_SIZE_MIN, IMAGE_SIZE_MIN),
-               tile_edge:Tuple[EnumEdgeWrap,...]=(EnumEdgeWrap.CLAMP, EnumEdgeWrap.CLAMP),
-               **kw) -> np.ndarray:
-
+    def render(self, coreVar: Dict[str, Any], **kw) -> np.ndarray:
         glfw.make_context_current(self.__window)
         gl.glUseProgram(self.__program)
 
-        # current time in shader lifetime
-        if (val := self.__shaderVar.get('iTime', -1)) > -1:
-            gl.glUniform1f(val, iTime)
+        iTimeVal = coreVar['iTime']
+        iFrame = coreVar['iFrame']
+        iFrameRate = coreVar['iFrameRate']
 
-        # the current frame based on the life time and "fps"
-        if (val := self.__shaderVar.get('iFrame', -1)) > -1:
-            gl.glUniform1i(val, iFrame)
+        if iTimeVal == -1:
+            iTimeVal = iFrame / iFrameRate
+        else:
+            iFrame = int(iFrameRate * iTimeVal)
 
+        if (loc := self.__shaderVar['iFrame']) > -1:
+            gl.glUniform1i(loc, iFrame)
+
+        if (loc := self.__shaderVar['iFrameRate']) > -1:
+            gl.glUniform1f(loc, iFrameRate)
+
+        if (loc := self.__shaderVar['iTime']) > -1:
+            gl.glUniform1f(loc, iTimeVal)
+
+        if (loc := self.__shaderVar['iBatch']) > -1:
+            gl.glUniform1f(loc, coreVar['batch'])
+
+        if (loc := self.__shaderVar['iSeed']) > -1:
+            gl.glUniform1i(loc, coreVar['seed'])
+
+        iResolution = coreVar['iResolution']
         if iResolution[0] != self.__size[0] or iResolution[1] != self.__size[1]:
             iResolution = (
                 min(IMAGE_SIZE_MAX, max(IMAGE_SIZE_MIN, iResolution[0])),
@@ -269,9 +282,9 @@ class GLSLShader:
             logger.debug(f"iResolution {self.__size} ==> {iResolution}")
             self.__size = iResolution
 
-            if (rez := self.__shaderVar.get('iResolution', -1)) > -1:
-                glfw.make_context_current(self.__window)
-                gl.glUniform3f(rez, self.__size[0], self.__size[1], 0)
+            val = self.__shaderVar['iResolution']
+            if (loc := self.__shaderVar['iResolution']) > -1:
+                gl.glUniform3f(loc, self.__size[0], self.__size[1], 0)
 
         texture_index = -1
         for uk, uv in self.__userVar.items():
@@ -297,7 +310,6 @@ class GLSLShader:
 
                 if uk not in self.__texture_hashes or self.__texture_hashes[uk] != current_hash:
                     val = image_convert(val, 4)
-                    print(val.shape)
                     val = val[::-1,:]
                     val = val.astype(np.float32) / 255.0
                     val = cv2.resize(val, self.__size, interpolation=cv2.INTER_LINEAR)
@@ -310,16 +322,15 @@ class GLSLShader:
 
                     # Set edge wrapping modes
                     for idx, text_wrap in enumerate([gl.GL_TEXTURE_WRAP_S, gl.GL_TEXTURE_WRAP_T]):
-                        if tile_edge[idx] == EnumEdgeWrap.WRAP:
+                        if coreVar['edge'][idx] == EnumEdgeWrap.WRAP:
                             gl.glTexParameteri(gl.GL_TEXTURE_2D, text_wrap, gl.GL_REPEAT)
-                        elif tile_edge[idx] == EnumEdgeWrap.MIRROR:
+                        elif coreVar['edge'][idx] == EnumEdgeWrap.MIRROR:
                             gl.glTexParameteri(gl.GL_TEXTURE_2D, text_wrap, gl.GL_MIRRORED_REPEAT)
                         else:
                             gl.glTexParameteri(gl.GL_TEXTURE_2D, text_wrap, gl.GL_CLAMP_TO_EDGE)
 
                 gl.glUniform1i(p_loc, texture_index)
             elif val:
-                # print('parsed', val, type(val))
                 if isinstance(p_value, EnumType):
                     val = p_value[val].value
                 elif isinstance(val, str):
@@ -336,7 +347,8 @@ class GLSLShader:
                     self.__uniform_state[uk] = val
 
         gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.__fbo)
-        gl.glClearColor(*self.__bgcolor)
+        matte = [c/255. for c in coreVar['matte']]
+        gl.glClearColor(*matte)
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, 3)
 
