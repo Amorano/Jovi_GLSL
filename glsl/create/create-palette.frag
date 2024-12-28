@@ -8,7 +8,7 @@
 // name: COLOR PALETTE
 // desc: Color palette creation using the formula: color(t) = a + b * cos[tau(c*t+d)]. See https://iquilezles.org/articles/palettes for more information.
 // category: CREATE
-// control: wh,
+// control: res,
 
 #include .lib/const.lib
 

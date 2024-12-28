@@ -115,26 +115,6 @@ export function nodeFitHeight(node) {
     app.graph.setDirtyCanvas(!0, !1);
 }
 
-// flash status for each element
-const flashStatusMap = new Map();
-
-export async function flashBackgroundColor(element, duration, flashCount, color="red") {
-    if (flashStatusMap.get(element)) {
-        return;
-    }
-
-    flashStatusMap.set(element, true);
-    const originalColor = element.style.backgroundColor;
-
-    for (let i = 0; i < flashCount; i++) {
-        element.style.backgroundColor = color;
-        await new Promise(resolve => setTimeout(resolve, duration / 2));
-        element.style.backgroundColor = originalColor;
-        await new Promise(resolve => setTimeout(resolve, duration / 2));
-    }
-    flashStatusMap.set(element, false);
-}
-
 function arrayToObject(values, length, parseFn) {
     const result = {};
     for (let i = 0; i < length; i++) {

@@ -31,12 +31,14 @@ GLSL_PROGRAMS['vertex'].update({str(f.relative_to(ROOT_GLSL).as_posix()):
 
 USER_GLSL = ROOT / 'user'
 USER_GLSL.mkdir(parents=True, exist_ok=True)
+logger.debug(f"user shader folder: {USER_GLSL}")
 if (USER_GLSL := os.getenv("JOV_GLSL", str(USER_GLSL))) is not None:
     GLSL_PROGRAMS['vertex'].update({str(f.relative_to(USER_GLSL).as_posix()):
                                     str(f) for f in Path(USER_GLSL).rglob('*.vert')})
 
 GLSL_PROGRAMS['fragment'].update({str(f.relative_to(ROOT_GLSL).as_posix()):
                                   str(f) for f in Path(ROOT_GLSL).rglob('*.frag')})
+
 if USER_GLSL is not None:
     GLSL_PROGRAMS['fragment'].update({str(f.relative_to(USER_GLSL).as_posix()):
                                       str(f) for f in Path(USER_GLSL).rglob('*.frag')})

@@ -29,8 +29,6 @@ from typing import Any, Generator, Tuple
 
 from loguru import logger
 
-from server import PromptServer
-
 # ==============================================================================
 # === GLOBAL ===
 # ==============================================================================
@@ -70,7 +68,7 @@ class Singleton(type):
 
 class JOVBaseNode:
     NOT_IDEMPOTENT = True
-    CATEGORY = f"JOVI_GLSL 🔺🟩🔵"
+    CATEGORY = f"JOVI_GLSL 🦚"
     RETURN_TYPES = ("IMAGE", "IMAGE", "MASK")
     RETURN_NAMES = ('RGBA', 'RGB', 'MASK')
     FUNCTION = "run"
@@ -138,10 +136,6 @@ def load_file(fname: str) -> str | None:
             return f.read()
     except Exception as e:
         logger.error(e)
-
-def comfy_message(ident:str, route:str, data:dict) -> None:
-    data['id'] = ident
-    PromptServer.instance.send_sync(route, data)
 
 def deep_merge(d1: dict, d2: dict) -> dict:
     """

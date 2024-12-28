@@ -2,7 +2,8 @@
 // desc: draws 2 triangles as a quad for a surface to manipulate
 
 #version 460
-precision highp float;
+
+precision mediump float;
 
 void main()
 {

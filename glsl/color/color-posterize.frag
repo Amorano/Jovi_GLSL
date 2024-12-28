@@ -1,7 +1,6 @@
 // name: POSTERIZE
 // desc: Reduce the pixel color data range
 // category: COLOR
-// pass: filter-minmax
 
 #include .lib/color.lib
 

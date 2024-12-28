@@ -91,7 +91,7 @@ The basic shaders for each of these programs is included in the default location
 Shaders with a 🌈 (rainbow) icon at the end of their name are internal shaders that ship with this repository.
 Shaders with a 🦄 (unicorn) icon at the end of their name are custom user shaders loaded from the user directory.
 
-# VERTEX SHADER
+## VERTEX SHADER
 
 ```
 #version 330 core
@@ -107,7 +107,7 @@ void main()
 
 The default vertex shader is simply a quad with the UV mapped from 0..1.
 
-# FRAGMENT SHADER
+## FRAGMENT SHADER
 
 ```
 #version 440
@@ -129,21 +129,15 @@ uniform int     iFrame;
 #define M_TAU (2.0 * M_PI)
 ```
 
-
 All shaders will have a header file, with pre-set variables for shader program usage, injected at the top. These are "mostly" mirrored from Shadertoy variables, with a few changes:
 
 NAME | TYPE | USAGE
 ---|---|---
-iResolution | vec3 | Dimensions of the GL canvas
-iTime | float | current time in shader's lifetime
+iResolution | vec3 | Width and Height dimensions of the GL canvas
+iFrame | int | the current frame
 iFrameRate | float | the desired FPS
-iFrame | int | the current frame based on the `iTime` and `iFrameRate`
-
-There are also a few functions defined to keep compatibility for an easier 1:1 transition:
-
-SHORTHAND | GLSL FUNCTION
----|---
-texture | texture2D
+iTime | float | current time in shader's lifetime based on `iFrameRate` and `iFrame`
+iSeed | int | seed value for noise shaders
 
 ## ENTRY POINT
 
@@ -163,6 +157,7 @@ Shaders are 100% fully GLSL compatible; however, there can be additional informa
 // name: GRAYSCALE
 // desc: Convert input to grayscale
 // category: COLOR
+// control:
 ```
 
 The meta data breakdown of this shader header:
@@ -171,7 +166,23 @@ KEY | USAGE | EXPLANATION
 ---|---|---
 name | GRAYSCALE | title of the node with an added 🧙🏽 for internal and 🧙🏽‍♀️ for custom nodes
 desc | Convert input to grayscale | text that shows up for preview nodes and the Jovimetrix help panel
-category | COLOR | ComfyUI menu placement. Added to the end of `JOVIMETRIX 🔺🟩🔵/GLSL`
+category | COLOR | ComfyUI menu placement. Added to the end of `JOVI_GLSL 🦚`
+control | Comma Seperated List | Explicit list of additional controls to add to the dynamic node. Possible values are included in the control list below.
+
+### CONTROLS
+
+The case of the controls doesnt matter when being parsed. The formats are just for clarity.
+
+NAME | PURPOSE | DEFAULT
+---|---|---
+res | Width and Height | 512, 512
+frame | Current frame to render | 0
+frameRate | Used to calculate frame step size and iTime | 24
+time | Value to use directly; if > -1 will override iFrame/iFrameRate calculation | -1
+batch | Number of frames to generate | 0 (Continuous per queue)
+matte | GL Clear or Background color | 0,0,0,255
+edge | Clamp, Wrap or Mirror the image edge(s) | Clamp
+seed | Seed value | 0
 
 `UNIFORM fields` also have metadata about usage(clipping for number fields) and their tooltips:
 
@@ -187,9 +198,9 @@ For the convert uniform this means a vector3 field with a default value of `<0.2
 
 If you need to omit fields, like a minimum, just place the token separator (;) by itself, for example:
 
-uniform float num; // 0.5; ; 10
+`uniform float num; // 0.5; ; 10`
 
-This would clip the upper-bound to 10 and allow the number to go to -system maximum.
+This would allow the number to have a lower bound of -system maximum and clip the upper-bound at 10.
 
 <!---------------------------------------------------------------------------->
 
