@@ -16,8 +16,13 @@
 @description: Integrates GLSL shader support.
 @node list:
     GLSLNode
-@version: 1.0.0
+@version: 1.0.1
 """
+
+__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
+__author__ = """Alexander G. Morano"""
+__email__ = "amorano@gmail.com"
+__version__ = "1.0.1"
 
 import os
 import sys
@@ -37,8 +42,6 @@ NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
 WEB_DIRECTORY = "./web"
 
-__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
-
 ROOT = Path(__file__).resolve().parent
 ROOT_COMFY = ROOT.parent.parent
 ROOT_DOC = ROOT / 'res/doc'
@@ -47,6 +50,8 @@ JOV_WEB = ROOT / 'web'
 JOV_INTERNAL = os.getenv("JOV_INTERNAL", 'false').strip().lower() in ('true', '1', 't')
 JOV_LOG_LEVEL = os.getenv("JOV_LOG_LEVEL", "INFO")
 logger.configure(handlers=[{"sink": sys.stdout, "level": JOV_LOG_LEVEL}])
+
+JOV_PACKAGE = "Jovi_GLSL"
 
 # ==============================================================================
 # === THERE CAN BE ONLY ONE ===
@@ -68,7 +73,7 @@ class Singleton(type):
 
 class JOVBaseNode:
     NOT_IDEMPOTENT = True
-    CATEGORY = f"JOVI_GLSL 🦚"
+    CATEGORY = f"{JOV_PACKAGE.upper()} 🦚"
     RETURN_TYPES = ("IMAGE", "IMAGE", "MASK")
     RETURN_NAMES = ('RGBA', 'RGB', 'MASK')
     FUNCTION = "run"
@@ -193,19 +198,19 @@ def zip_longest_fill(*iterables: Any) -> Generator[Tuple[Any, ...], None, None]:
 # === NODE LOADER ===
 # ==============================================================================
 
+
 def loader():
-    node_count = 0
-    CLASS_MAPPINGS = {}
-    CLASS_MAPPINGS_WIP = {}
+    global NODE_DISPLAY_NAME_MAPPINGS, NODE_CLASS_MAPPINGS
     NODE_LIST_MAP = {}
+
     for fname in ROOT.glob('core/**/*.py'):
         if fname.stem.startswith('_'):
             continue
 
         try:
-            route = str(fname).replace("\\", "/").split("Jovi_GLSL/core/")[1]
+            route = str(fname).replace("\\", "/").split(f"{JOV_PACKAGE}/core/")[1]
             route = route.split('.')[0].replace('/', '.')
-            module = f"Jovi_GLSL.core.{route}"
+            module = f"{JOV_PACKAGE}.core.{route}"
             module = importlib.import_module(module)
         except Exception as e:
             logger.warning(f"module failed {fname}")
@@ -216,36 +221,26 @@ def loader():
         try:
             for class_name, class_def in module.import_dynamic():
                 setattr(module, class_name, class_def)
-                logger.debug(f"shader: {class_name}")
+                # logger.debug(f"shader: {class_name}")
         except Exception as e:
             pass
 
         classes = inspect.getmembers(module, inspect.isclass)
         for class_name, class_object in classes:
-            # assume both attrs are good enough....
             if not class_name.endswith('BaseNode') and hasattr(class_object, 'NAME') and hasattr(class_object, 'CATEGORY'):
                 name = class_object.NAME
-                CLASS_MAPPINGS[name] = class_object
-                if not name.endswith(GLSL_CUSTOM):
-                    desc = class_object.DESCRIPTION if hasattr(class_object, 'DESCRIPTION') else name
-                    NODE_LIST_MAP[name] = desc.split('.')[0].strip('\n')
-                else:
-                    logger.debug(f"customs {name}")
-                node_count += 1
+                NODE_DISPLAY_NAME_MAPPINGS[name] = name
+                NODE_CLASS_MAPPINGS[name] = class_object
+                desc = class_object.DESCRIPTION if hasattr(class_object, 'DESCRIPTION') else name
+                NODE_LIST_MAP[name] = desc.split('.')[0].strip('\n')
 
-        logger.info(f"✅ {module.__name__}")
-    logger.info(f"{node_count} nodes loaded")
-
-    global NODE_DISPLAY_NAME_MAPPINGS, NODE_CLASS_MAPPINGS
-
-    NODE_DISPLAY_NAME_MAPPINGS = {k: v.NAME_PRETTY if hasattr(v, 'NAME_PRETTY') else k for k, v in CLASS_MAPPINGS.items()}
-    CLASS_MAPPINGS.update({k: v for k, v in CLASS_MAPPINGS_WIP.items()})
-    NODE_DISPLAY_NAME_MAPPINGS.update({k: k for k in CLASS_MAPPINGS_WIP.keys()})
-    CLASS_MAPPINGS = {x[0] : x[1] for x in sorted(CLASS_MAPPINGS.items(),
+    NODE_CLASS_MAPPINGS = {x[0] : x[1] for x in sorted(NODE_CLASS_MAPPINGS.items(),
                                                             key=lambda item: getattr(item[1], 'SORT', 0))}
 
-    for k, v in CLASS_MAPPINGS.items():
-        NODE_CLASS_MAPPINGS[k] = v
+    keys = NODE_CLASS_MAPPINGS.keys()
+    for name in keys:
+        logger.debug(f"✅ {name} :: {NODE_DISPLAY_NAME_MAPPINGS[name]}")
+    logger.info(f"{len(keys)} nodes loaded")
 
     # only do the list on local runs...
     if JOV_INTERNAL:

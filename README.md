@@ -33,6 +33,10 @@
 
 ## UPDATES
 
+**2024/01/04** @1.0.1:
+* removing vector nodes
+
+
 **2024/12/27** @1.0.0:
 * initial release
 * reworked [JOVIMETRIX](https://github.com/amorano/jovimetrix) GLSL into standalone, dynamic node system
