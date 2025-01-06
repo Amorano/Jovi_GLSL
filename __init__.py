@@ -22,7 +22,7 @@
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
 __author__ = """Alexander G. Morano"""
 __email__ = "amorano@gmail.com"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 import os
 import sys
@@ -30,7 +30,6 @@ import json
 import inspect
 import importlib
 from pathlib import Path
-from typing import Any, Generator, Tuple
 
 from loguru import logger
 
@@ -54,85 +53,7 @@ logger.configure(handlers=[{"sink": sys.stdout, "level": JOV_LOG_LEVEL}])
 JOV_PACKAGE = "Jovi_GLSL"
 
 # ==============================================================================
-# === THERE CAN BE ONLY ONE ===
-# ==============================================================================
-
-class Singleton(type):
-    _instances = {}
-
-    def __call__(cls, *arg, **kw) -> Any:
-        # If the instance does not exist, create and store it
-        if cls not in cls._instances:
-            instance = super().__call__(*arg, **kw)
-            cls._instances[cls] = instance
-        return cls._instances[cls]
-
-# ==============================================================================
-# === CORE NODES ===
-# ==============================================================================
-
-class JOVBaseNode:
-    NOT_IDEMPOTENT = True
-    CATEGORY = f"{JOV_PACKAGE.upper()} 🦚"
-    RETURN_TYPES = ("IMAGE", "IMAGE", "MASK")
-    RETURN_NAMES = ('RGBA', 'RGB', 'MASK')
-    FUNCTION = "run"
-
-    @classmethod
-    def VALIDATE_INPUTS(cls, *arg, **kw) -> bool:
-        return True
-
-    @classmethod
-    def INPUT_TYPES(cls, prompt:bool=False, extra_png:bool=False, dynprompt:bool=False) -> dict:
-        data = {
-            "required": {},
-            "optional": {},
-            "outputs": {
-                0: ("IMAGE", {"tooltips":"Full channel [RGBA] image. If there is an alpha, the image will be masked out with it when using this output."}),
-                1: ("IMAGE", {"tooltips":"Three channel [RGB] image. There will be no alpha."}),
-                2: ("MASK", {"tooltips":"Single channel mask output."}),
-            },
-            "hidden": {
-                "ident": "UNIQUE_ID"
-            }
-        }
-        if prompt:
-            data["hidden"]["prompt"] = "PROMPT"
-        if extra_png:
-            data["hidden"]["extra_pnginfo"] = "EXTRA_PNGINFO"
-
-        if dynprompt:
-            data["hidden"]["dynprompt"] = "DYNPROMPT"
-        return data
-
-class AnyType(str):
-    """AnyType input wildcard trick taken from pythongossss's:
-
-    https://github.com/pythongosssss/ComfyUI-Custom-Scripts
-    """
-    def __ne__(self, __value: object) -> bool:
-        return False
-
-JOV_TYPE_ANY = AnyType("*")
-
-# want to make explicit entries; comfy only looks for single type
-JOV_TYPE_COMFY = "BOOLEAN|FLOAT|INT"
-JOV_TYPE_VECTOR = "VEC2|VEC3|VEC4|VEC2INT|VEC3INT|VEC4INT|COORD2D"
-JOV_TYPE_NUMBER = f"{JOV_TYPE_COMFY}|{JOV_TYPE_VECTOR}"
-JOV_TYPE_IMAGE = "IMAGE|MASK"
-JOV_TYPE_FULL = f"{JOV_TYPE_NUMBER}|{JOV_TYPE_IMAGE}"
-
-JOV_TYPE_COMFY = JOV_TYPE_ANY
-JOV_TYPE_VECTOR = JOV_TYPE_ANY
-JOV_TYPE_NUMBER = JOV_TYPE_ANY
-JOV_TYPE_IMAGE = JOV_TYPE_ANY
-JOV_TYPE_FULL = JOV_TYPE_ANY
-
-GLSL_INTERNAL = '🌈'
-GLSL_CUSTOM = '🦄'
-
-# ==============================================================================
-# === CORE SUPPORT ===
+# === SUPPORT ===
 # ==============================================================================
 
 def load_file(fname: str) -> str | None:
@@ -142,62 +63,9 @@ def load_file(fname: str) -> str | None:
     except Exception as e:
         logger.error(e)
 
-def deep_merge(d1: dict, d2: dict) -> dict:
-    """
-    Deep merge multiple dictionaries recursively.
-
-    Args:
-        *dicts: Variable number of dictionaries to be merged.
-
-    Returns:
-        dict: Merged dictionary.
-    """
-    for key in d2:
-        if key in d1:
-            if isinstance(d1[key], dict) and isinstance(d2[key], dict):
-                deep_merge(d1[key], d2[key])
-            else:
-                d1[key] = d2[key]
-        else:
-            d1[key] = d2[key]
-    return d1
-
-def zip_longest_fill(*iterables: Any) -> Generator[Tuple[Any, ...], None, None]:
-    """
-    Zip longest with fill value.
-
-    This function behaves like itertools.zip_longest, but it fills the values
-    of exhausted iterators with their own last values instead of None.
-    """
-    try:
-        iterators = [iter(iterable) for iterable in iterables]
-    except Exception as e:
-        logger.error(iterables)
-        logger.error(str(e))
-    else:
-        while True:
-            values = [next(iterator, None) for iterator in iterators]
-
-            # Check if all iterators are exhausted
-            if all(value is None for value in values):
-                break
-
-            # Fill in the last values of exhausted iterators with their own last values
-            for i, _ in enumerate(iterators):
-                if values[i] is None:
-                    iterator_copy = iter(iterables[i])
-                    while True:
-                        current_value = next(iterator_copy, None)
-                        if current_value is None:
-                            break
-                        values[i] = current_value
-
-            yield tuple(values)
-
 # ==============================================================================
-# === NODE LOADER ===
+# === LOADER ===
 # ==============================================================================
-
 
 def loader():
     global NODE_DISPLAY_NAME_MAPPINGS, NODE_CLASS_MAPPINGS

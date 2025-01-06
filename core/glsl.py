@@ -13,19 +13,21 @@ from loguru import logger
 
 from comfy.utils import ProgressBar
 
-from Jovi_GLSL import GLSL_INTERNAL, GLSL_CUSTOM, JOV_TYPE_IMAGE, \
-    load_file, zip_longest_fill
+from Jovi_GLSL import load_file
 
-from Jovi_GLSL.core import GLSL_PROGRAMS, PTYPE, RE_VARIABLE, ROOT_GLSL, \
-    IMAGE_SIZE_MIN, IMAGE_SIZE_DEFAULT, IMAGE_SIZE_MAX, \
+from Jovi_GLSL.core import GLSL_PROGRAMS, JOV_TYPE_IMAGE, PTYPE, RE_VARIABLE, \
+    ROOT_GLSL, IMAGE_SIZE_MIN, IMAGE_SIZE_DEFAULT, IMAGE_SIZE_MAX, \
     CompileException, JOVBaseGLSLNode, EnumConvertType, \
-    cv2tensor_full, image_convert, parse_param, parse_value, tensor2cv
+    cv2tensor_full, image_convert, parse_param, parse_value, tensor2cv, zip_longest_fill
 
 from Jovi_GLSL.core.glsl_shader import GLSLShader
 
 # ==============================================================================
 # === CONSTANT ===
 # ==============================================================================
+
+GLSL_INTERNAL = '🌈'
+GLSL_CUSTOM = '🦄'
 
 RE_INCLUDE = re.compile(r"^\s*#include\s+([A-Za-z_\-\.\\\/]{3,})$", re.MULTILINE)
 RE_SHADER_META = re.compile(r"^\/\/\s?([A-Za-z_]{3,}):\s?(.+)$", re.MULTILINE)

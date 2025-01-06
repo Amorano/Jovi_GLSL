@@ -13,8 +13,8 @@ import numpy as np
 import OpenGL.GL as gl
 from loguru import logger
 
-from Jovi_GLSL.core import IMAGE_SIZE_MAX, IMAGE_SIZE_MIN, PROG_VERTEX, PROG_FRAGMENT, \
-    PROG_FOOTER, PROG_HEADER, PTYPE, RE_VARIABLE, \
+from Jovi_GLSL.core import IMAGE_SIZE_MAX, IMAGE_SIZE_MIN, PROG_VERTEX, \
+    PROG_FRAGMENT, PROG_FOOTER, PROG_HEADER, PTYPE, RE_VARIABLE, \
     CompileException, \
     image_convert, parse_value
 
