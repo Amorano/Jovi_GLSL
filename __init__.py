@@ -1,28 +1,19 @@
 """
-     ██  ██████  ██    ██ ██ ███    ███ ███████ ████████ ██████  ██ ██   ██ 
-     ██ ██    ██ ██    ██ ██ ████  ████ ██         ██    ██   ██ ██  ██ ██  
-     ██ ██    ██ ██    ██ ██ ██ ████ ██ █████      ██    ██████  ██   ███  
-██   ██ ██    ██  ██  ██  ██ ██  ██  ██ ██         ██    ██   ██ ██  ██ ██ 
- █████   ██████    ████   ██ ██      ██ ███████    ██    ██   ██ ██ ██   ██ 
+     ██╗ ██████╗ ██╗   ██╗██╗     ██████╗ ██╗     ███████╗██╗
+     ██║██╔═══██╗██║   ██║██║    ██╔════╝ ██║     ██╔════╝██║
+     ██║██║   ██║██║   ██║██║    ██║  ███╗██║     ███████╗██║
+██   ██║██║   ██║╚██╗ ██╔╝██║    ██║   ██║██║     ╚════██║██║
+╚█████╔╝╚██████╔╝ ╚████╔╝ ██║    ╚██████╔╝███████╗███████║███████╗
+ ╚════╝  ╚═════╝   ╚═══╝  ╚═╝     ╚═════╝ ╚══════╝╚══════╝╚══════╝
 
-                            OPENGL Shaders for ComfyUI
-                    http://www.github.com/Amorano/Jovi_GLSL
-
-@title: Jovi_GLSL
-@author: amorano
-@category: GLSL
-@reference: https://github.com/Amorano/Jovi_GLSL
-@tags: GLSL, HLSL, shaders
-@description: Integrates GLSL shader support.
-@node list:
-    GLSLNode
-@version: 1.0.1
+                  OPENGL Shaders for ComfyUI
+            http://www.github.com/Amorano/Jovi_GLSL
 """
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
 __author__ = """Alexander G. Morano"""
 __email__ = "amorano@gmail.com"
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 
 import os
 import sys
