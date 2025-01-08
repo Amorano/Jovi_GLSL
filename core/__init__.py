@@ -15,7 +15,9 @@ import torch
 import numpy as np
 from loguru import logger
 
-from Jovi_GLSL import JOV_PACKAGE, ROOT, load_file
+from .. import JOV_TYPE_ANY, ROOT, \
+    JOVBaseNode, \
+    load_file
 
 # ==============================================================================
 # === SHADER LOADER ===
@@ -89,48 +91,6 @@ class Singleton(type):
 # ==============================================================================
 # === CORE NODES ===
 # ==============================================================================
-
-class JOVBaseNode:
-    NOT_IDEMPOTENT = True
-    CATEGORY = f"{JOV_PACKAGE.upper()} 🦚"
-    RETURN_TYPES = ("IMAGE", "IMAGE", "MASK")
-    RETURN_NAMES = ('RGBA', 'RGB', 'MASK')
-    FUNCTION = "run"
-
-    @classmethod
-    def VALIDATE_INPUTS(cls, *arg, **kw) -> bool:
-        return True
-
-    @classmethod
-    def INPUT_TYPES(cls, prompt:bool=False, extra_png:bool=False, dynprompt:bool=False) -> dict:
-        data = {
-            "required": {},
-            "optional": {},
-            "outputs": {
-                0: ("IMAGE", {"tooltips":"Full channel [RGBA] image. If there is an alpha, the image will be masked out with it when using this output."}),
-                1: ("IMAGE", {"tooltips":"Three channel [RGB] image. There will be no alpha."}),
-                2: ("MASK", {"tooltips":"Single channel mask output."}),
-            },
-            "hidden": {
-                "ident": "UNIQUE_ID"
-            }
-        }
-        if prompt:
-            data["hidden"]["prompt"] = "PROMPT"
-        if extra_png:
-            data["hidden"]["extra_pnginfo"] = "EXTRA_PNGINFO"
-
-        if dynprompt:
-            data["hidden"]["dynprompt"] = "DYNPROMPT"
-        return data
-
-class AnyType(str):
-    """AnyType input wildcard trick taken from pythongossss's:
-
-    https://github.com/pythongosssss/ComfyUI-Custom-Scripts
-    """
-    def __ne__(self, __value: object) -> bool:
-        return False
 
 class JOVBaseGLSLNode(JOVBaseNode):
     NOT_IDEMPOTENT = True
@@ -220,7 +180,6 @@ JOV_TYPE_NUMBER = f"{JOV_TYPE_COMFY}|{JOV_TYPE_VECTOR}"
 JOV_TYPE_IMAGE = "IMAGE|MASK"
 JOV_TYPE_FULL = f"{JOV_TYPE_NUMBER}|{JOV_TYPE_IMAGE}"
 
-JOV_TYPE_ANY = AnyType("*")
 JOV_TYPE_COMFY = JOV_TYPE_ANY
 JOV_TYPE_VECTOR = JOV_TYPE_ANY
 JOV_TYPE_NUMBER = JOV_TYPE_ANY

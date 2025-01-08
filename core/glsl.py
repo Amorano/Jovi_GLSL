@@ -13,21 +13,19 @@ from loguru import logger
 
 from comfy.utils import ProgressBar
 
-from Jovi_GLSL import load_file
+from .. import load_file
 
-from Jovi_GLSL.core import GLSL_PROGRAMS, JOV_TYPE_IMAGE, PTYPE, RE_VARIABLE, \
+from ..core import GLSL_PROGRAMS, JOV_TYPE_IMAGE, PTYPE, RE_VARIABLE, \
     ROOT_GLSL, IMAGE_SIZE_MIN, IMAGE_SIZE_DEFAULT, IMAGE_SIZE_MAX, \
     CompileException, JOVBaseGLSLNode, EnumConvertType, \
-    cv2tensor_full, image_convert, parse_param, parse_value, tensor2cv, zip_longest_fill
+    cv2tensor_full, image_convert, parse_param, parse_value, \
+    tensor2cv, zip_longest_fill
 
-from Jovi_GLSL.core.glsl_shader import GLSLShader
+from ..core.glsl_shader import GLSLShader
 
 # ==============================================================================
 # === CONSTANT ===
 # ==============================================================================
-
-GLSL_INTERNAL = '🌈'
-GLSL_CUSTOM = '🦄'
 
 RE_INCLUDE = re.compile(r"^\s*#include\s+([A-Za-z_\-\.\\\/]{3,})$", re.MULTILINE)
 RE_SHADER_META = re.compile(r"^\/\/\s?([A-Za-z_]{3,}):\s?(.+)$", re.MULTILINE)
@@ -297,7 +295,7 @@ def load_file_glsl(fname: str) -> str:
 
 def import_dynamic() -> Tuple[str,...]:
     ret = []
-    sort = 4000
+    sort = 5000
     root = str(ROOT_GLSL)
     for name, fname in GLSL_PROGRAMS['fragment'].items():
         if (shader := load_file_glsl(fname)) is None:
@@ -312,18 +310,17 @@ def import_dynamic() -> Tuple[str,...]:
         class_name = name.title().replace(' ', '_')
         class_name = f'GLSLNode_{class_name}'
 
-        emoji = GLSL_CUSTOM
         sort_order = sort
+        # put custom user nodes last
         if fname.startswith(root):
-            emoji = GLSL_INTERNAL
-            sort_order -= 2500
+            sort_order -= 5000
 
         category = GLSLNodeDynamic.CATEGORY
         if (sub := meta.get('category', None)) is not None:
             category += f'/{sub}'
 
         class_def = type(class_name, (GLSLNodeDynamic,), {
-            "NAME": f'GLSL {name} (JOV_GL) {emoji}'.upper(),
+            "NAME": name,
             "DESCRIPTION": meta.get('desc', name),
             "CATEGORY": category.upper(),
             "FRAGMENT": shader,

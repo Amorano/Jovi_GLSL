@@ -22,7 +22,7 @@
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
 __author__ = """Alexander G. Morano"""
 __email__ = "amorano@gmail.com"
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 import os
 import sys
@@ -30,6 +30,7 @@ import json
 import inspect
 import importlib
 from pathlib import Path
+from types import ModuleType
 
 from loguru import logger
 
@@ -50,7 +51,59 @@ JOV_INTERNAL = os.getenv("JOV_INTERNAL", 'false').strip().lower() in ('true', '1
 JOV_LOG_LEVEL = os.getenv("JOV_LOG_LEVEL", "INFO")
 logger.configure(handlers=[{"sink": sys.stdout, "level": JOV_LOG_LEVEL}])
 
-JOV_PACKAGE = "Jovi_GLSL"
+JOV_PACKAGE = "JOV_GL"
+
+# ==============================================================================
+# === CORE NODES ===
+# ==============================================================================
+
+class JOVBaseNode:
+    NOT_IDEMPOTENT = True
+    CATEGORY = f"{JOV_PACKAGE} 🦚"
+    RETURN_TYPES = ("IMAGE", "IMAGE", "MASK")
+    RETURN_NAMES = ('RGBA', 'RGB', 'MASK')
+    FUNCTION = "run"
+
+    @classmethod
+    def VALIDATE_INPUTS(cls, *arg, **kw) -> bool:
+        return True
+
+    @classmethod
+    def INPUT_TYPES(cls, prompt:bool=False, extra_png:bool=False, dynprompt:bool=False) -> dict:
+        data = {
+            "required": {},
+            "optional": {},
+            "outputs": {
+                0: ("IMAGE", {"tooltips":"Full channel [RGBA] image. If there is an alpha, the image will be masked out with it when using this output."}),
+                1: ("IMAGE", {"tooltips":"Three channel [RGB] image. There will be no alpha."}),
+                2: ("MASK", {"tooltips":"Single channel mask output."}),
+            },
+            "hidden": {
+                "ident": "UNIQUE_ID"
+            }
+        }
+        if prompt:
+            data["hidden"]["prompt"] = "PROMPT"
+        if extra_png:
+            data["hidden"]["extra_pnginfo"] = "EXTRA_PNGINFO"
+
+        if dynprompt:
+            data["hidden"]["dynprompt"] = "DYNPROMPT"
+        return data
+
+# ==============================================================================
+# === TYPE ===
+# ==============================================================================
+
+class AnyType(str):
+    """AnyType input wildcard trick taken from pythongossss's:
+
+    https://github.com/pythongosssss/ComfyUI-Custom-Scripts
+    """
+    def __ne__(self, __value: object) -> bool:
+        return False
+
+JOV_TYPE_ANY = AnyType("*")
 
 # ==============================================================================
 # === SUPPORT ===
@@ -67,6 +120,27 @@ def load_file(fname: str) -> str | None:
 # === LOADER ===
 # ==============================================================================
 
+def load_module(name: str) -> None|ModuleType:
+    module = inspect.getmodule(inspect.stack()[0][0]).__name__
+    try:
+        route = str(name).replace("\\", "/")
+        route = route.split(f"{module}/core/")[1]
+        route = route.split('.')[0].replace('/', '.')
+    except Exception as e:
+        logger.warning(f"module failed {name}")
+        logger.warning(str(e))
+        return
+
+    try:
+        module = f"{module}.core.{route}"
+        module = importlib.import_module(module)
+    except Exception as e:
+        logger.warning(f"module failed {module}")
+        logger.warning(str(e))
+        return
+
+    return module
+
 def loader():
     global NODE_DISPLAY_NAME_MAPPINGS, NODE_CLASS_MAPPINGS
     NODE_LIST_MAP = {}
@@ -75,39 +149,33 @@ def loader():
         if fname.stem.startswith('_'):
             continue
 
-        try:
-            route = str(fname).replace("\\", "/").split(f"{JOV_PACKAGE}/core/")[1]
-            route = route.split('.')[0].replace('/', '.')
-            module = f"{JOV_PACKAGE}.core.{route}"
-            module = importlib.import_module(module)
-        except Exception as e:
-            logger.warning(f"module failed {fname}")
-            logger.warning(str(e))
+        if (module := load_module(fname)) is None:
             continue
 
         # check if there is a dynamic register function....
         try:
             for class_name, class_def in module.import_dynamic():
                 setattr(module, class_name, class_def)
-                # logger.debug(f"shader: {class_name}")
         except Exception as e:
             pass
 
         classes = inspect.getmembers(module, inspect.isclass)
         for class_name, class_object in classes:
             if not class_name.endswith('BaseNode') and hasattr(class_object, 'NAME') and hasattr(class_object, 'CATEGORY'):
-                name = class_object.NAME
+                name = f"{class_object.NAME} ({JOV_PACKAGE})"
                 NODE_DISPLAY_NAME_MAPPINGS[name] = name
                 NODE_CLASS_MAPPINGS[name] = class_object
-                desc = class_object.DESCRIPTION if hasattr(class_object, 'DESCRIPTION') else name
-                NODE_LIST_MAP[name] = desc.split('.')[0].strip('\n')
+
+                if class_object.SORT < 5000:
+                    desc = class_object.DESCRIPTION if hasattr(class_object, 'DESCRIPTION') else name
+                    NODE_LIST_MAP[name] = desc.split('.')[0].strip('\n')
 
     NODE_CLASS_MAPPINGS = {x[0] : x[1] for x in sorted(NODE_CLASS_MAPPINGS.items(),
                                                             key=lambda item: getattr(item[1], 'SORT', 0))}
 
     keys = NODE_CLASS_MAPPINGS.keys()
     for name in keys:
-        logger.debug(f"✅ {name} :: {NODE_DISPLAY_NAME_MAPPINGS[name]}")
+        logger.debug(f"✅ {name}")
     logger.info(f"{len(keys)} nodes loaded")
 
     # only do the list on local runs...

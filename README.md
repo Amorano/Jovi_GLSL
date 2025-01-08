@@ -33,6 +33,10 @@
 
 ## UPDATES
 
+**2024/01/07** @1.0.3:
+* relative imports
+* node names cleaned
+
 **2024/01/05** @1.0.2:
 * reorganized imports
 

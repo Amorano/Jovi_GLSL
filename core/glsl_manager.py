@@ -8,7 +8,7 @@ import gc
 import glfw
 from loguru import logger
 
-from Jovi_GLSL.core import Singleton
+from ..core import Singleton
 
 # ==============================================================================
 # === MANAGER ===
