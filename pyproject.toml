@@ -1,6 +1,6 @@
 [project]
 name = "jovi_glsl"
-description = "Integrates GLSL shader support."
+description = "ComfyUI Nodes that integrate GLSL shader support."
 version = "1.0.4"
 license = { file = "LICENSE" }
 dependencies = [
@@ -15,9 +15,9 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/Amorano/JOVI_GLSL"
+Repository = "https://github.com/Amorano/Jovi_GLSL"
 
 [tool.comfy]
 PublisherId = "amorano"
-DisplayName = "JOVI_GLSL"
+DisplayName = "Jovi_GLSL"
 Icon = ""
