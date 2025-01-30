@@ -164,7 +164,7 @@ class GLSLShader:
                 texture = None
                 if typ in ['sampler2D']:
                     texture = self.__textures[name] = gl.glGenTextures(1)
-                else:
+                elif default:
                     default = default.strip()
                     if default.startswith('EnumGLSL'):
                         typ = 'int'

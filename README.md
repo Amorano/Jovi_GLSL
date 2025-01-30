@@ -33,6 +33,10 @@
 
 ## UPDATES
 
+**2024/01/29** @1.0.5:
+* fixed parsing bug where uniforms could be defined inside comments (issue #2)[https://github.com/Amorano/Jovi_GLSL/issues/2]
+* empty defaults will no longer complain about `None` values
+
 **2024/01/07** @1.0.3:
 * relative imports
 * node names cleaned
