@@ -54,48 +54,69 @@ class GLSLNodeDynamic(JOVBaseGLSLNode):
         original_params = super().INPUT_TYPES()
         optional = original_params.get('optional', {})
         if 'RES' in cls.CONTROL:
-            optional["iRes"] = ("VEC2INT", {"default": (IMAGE_SIZE_DEFAULT, IMAGE_SIZE_DEFAULT),
-                                                               "mij":IMAGE_SIZE_MIN, "label": ['W', 'H'],
-                                                               "tooltip": "Width and Height as a Vector2 Integer (x, y)"})
+            optional["iRes"] = ("VEC2INT", {
+                "default": (IMAGE_SIZE_DEFAULT, IMAGE_SIZE_DEFAULT),
+                "mij":IMAGE_SIZE_MIN, "label": ['W', 'H'],
+                "tooltip": "Width and Height as a Vector2 Integer (x, y)"
+            })
 
         if 'FRAME' in cls.CONTROL:
-            optional["iFrame"] = ("INT", {"default": 0, "min": 0, "max": sys.maxsize,
-                                                                                       "tooltip": "Current frame to render"})
+            optional["iFrame"] = ("INT", {
+                "default": 0, "min": 0, "max": sys.maxsize,
+                "tooltip": "Current frame to render"
+            })
 
         if 'FRAMERATE' in cls.CONTROL:
-            optional["iFrameRate"] = ("INT", {"default": 24, "min": 1, "max": 120,
-                                                                                       "tooltip": "Used to calculate frame step size and iTime"})
+            optional["iFrameRate"] = ("INT", {
+                "default": 24, "min": 1, "max": 120,
+                "tooltip": "Used to calculate frame step size and iTime"
+            })
 
         if 'TIME' in cls.CONTROL:
-            optional["iTime"] = ("INT", {"default": -1, "min": -1, "max": sys.maxsize,
-                                                                                       "tooltip": "Value to use directly; if > -1 will override iFrame/iFrameRate calculation."})
+            optional["iTime"] = ("INT", {
+                "default": -1, "min": -1, "max": sys.maxsize,
+                "tooltip": "Value to use directly; if > -1 will override iFrame/iFrameRate calculation."
+            })
 
         if 'BATCH' in cls.CONTROL:
-            optional["batch"] = ("INT", {"default": 0, "min": 0, "max": sys.maxsize,
-                                                                                       "tooltip": "Number of frames to generate. 0 (continuous mode) means continue from the last queue generating the next single frame based on iFrameRate. In the shader this will be the index of the batch iteration or 0."})
+            optional["batch"] = ("INT", {
+                "default": 0, "min": 0, "max": sys.maxsize,
+                "tooltip": "Number of frames to generate. 0 (continuous mode) means continue from the last queue generating the next single frame based on iFrameRate. In the shader this will be the index of the batch iteration or 0."
+            })
 
         if 'MATTE' in cls.CONTROL:
-            optional["matte"] = ("VEC4INT", {"default": (0, 0, 0, 255),
-                                                                "rgb": True,
-                                                                "tooltip": "Define a background color for padding, if necessary. This is useful when images do not fit perfectly into the designated area and need a filler color"})
+            optional["matte"] = ("VEC4INT", {
+                "default": (0, 0, 0, 255),
+                "rgb": True,
+                "tooltip": "Define a background color for padding. Useful when images do not fit and need a filler color"
+            })
 
         if 'EDGE' in cls.CONTROL:
-            optional["edge_x"] = (EnumEdgeWrap._member_names_, {"default": EnumEdgeWrap.CLAMP.name,
-                                                                                   "tooltip": "Clamp, Wrap or Mirror the Image Edge"})
-            optional["edge_y"] = (EnumEdgeWrap._member_names_, {"default": EnumEdgeWrap.CLAMP.name,
-                                                                                   "tooltip": "Clamp, Wrap or Mirror the Image Edge"})
+            optional["edge_x"] = (EnumEdgeWrap._member_names_, {
+                "default": EnumEdgeWrap.CLAMP.name,
+                "tooltip": "Clamp, Wrap or Mirror the Image Edge"
+            })
+            optional["edge_y"] = (EnumEdgeWrap._member_names_, {
+                "default": EnumEdgeWrap.CLAMP.name,
+                "tooltip": "Clamp, Wrap or Mirror the Image Edge"
+            })
         else:
             if 'EDGEX' in cls.CONTROL:
-                optional["edge_x"] = (EnumEdgeWrap._member_names_, {"default": EnumEdgeWrap.CLAMP.name,
-                                                                                       "tooltip": "Clamp, Wrap or Mirror the Image Edge"})
+                optional["edge_x"] = (EnumEdgeWrap._member_names_, {
+                    "default": EnumEdgeWrap.CLAMP.name,
+                    "tooltip": "Clamp, Wrap or Mirror the Image Edge"
+                })
             if 'EDGEY' in cls.CONTROL:
-                optional["edge_y"] = (EnumEdgeWrap._member_names_, {"default": EnumEdgeWrap.CLAMP.name,
-                                                                                       "tooltip": "Clamp, Wrap or Mirror the Image Edge"})
+                optional["edge_y"] = (EnumEdgeWrap._member_names_, {
+                    "default": EnumEdgeWrap.CLAMP.name,
+                    "tooltip": "Clamp, Wrap or Mirror the Image Edge"
+                })
 
         if 'SEED' in cls.CONTROL:
-            optional["seed"] = ("INT", {"default": 0, "min": 0, "max": sys.maxsize,
-                                                                                       "tooltip": "Number of frames to generate. 0 (continuous mode) means continue from the last queue generating the next single frame based on iFrameRate."})
-
+            optional["seed"] = ("INT", {
+                "default": 0, "min": 0, "max": sys.maxsize,
+                "tooltip": "Number of frames to generate. 0 (continuous mode) means continue from the last queue generating the next single frame based on iFrameRate."
+            })
 
         """
         'MODE': (EnumScaleMode._member_names_, {"default": EnumScaleMode.MATTE.name})

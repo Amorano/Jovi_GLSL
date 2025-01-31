@@ -96,19 +96,12 @@ class JOVBaseGLSLNode(JOVBaseNode):
     NOT_IDEMPOTENT = True
     RETURN_TYPES = ("IMAGE", "IMAGE", "MASK")
     RETURN_NAMES = ('RGBA', 'RGB', 'MASK')
+    OUTPUT_TOOLTIPS = (
+        "Full channel [RGBA] image. If there is an alpha, the image will be masked out with it when using this output.",
+        "Three channel [RGB] image. There will be no alpha.",
+        "Single channel mask output."
+    )
     FUNCTION = "run"
-
-    @classmethod
-    def INPUT_TYPES(cls) -> dict:
-        d = super().INPUT_TYPES()
-        d = deep_merge(d, {
-            "outputs": {
-                0: ("IMAGE", {"tooltips":"Full channel [RGBA] image. If there is an alpha, the image will be masked out with it when using this output."}),
-                1: ("IMAGE", {"tooltips":"Three channel [RGB] image. There will be no alpha."}),
-                2: ("MASK", {"tooltips":"Single channel mask output."}),
-            }
-        })
-        return d
 
 # ==============================================================================
 # === CONSTANT ===
