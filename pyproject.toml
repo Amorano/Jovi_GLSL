@@ -1,8 +1,20 @@
 [project]
 name = "jovi_glsl"
 description = "ComfyUI Nodes that integrate GLSL shader support."
-version = "1.0.6"
+version = "1.0.7"
 license = { file = "LICENSE" }
+readme = "README.md"
+authors = [{ name = "Alexander G. Morano", email = "amorano@gmail.com" }]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Intended Audience :: Developers",
+]
+requires-python = ">=3.11"
 dependencies = [
     "aenum>=3.1.15",
     "glfw",
@@ -15,9 +27,12 @@ dependencies = [
 ]
 
 [project.urls]
+Homepage = "https://github.com/Amorano/Jovi_GLSL"
+Documentation = "https://github.com/Amorano/Jovi_GLSL/wiki"
 Repository = "https://github.com/Amorano/Jovi_GLSL"
+Issues = "https://github.com/Amorano/Jovi_GLSL/issues"
 
 [tool.comfy]
 PublisherId = "amorano"
-DisplayName = "Jovi_GLSL"
-Icon = ""
+DisplayName = "Jovi GLSL"
+Icon = "https://raw.githubusercontent.com/Amorano/Jovimetrix-examples/refs/heads/master/res/logo-jovi_glsl.png"

@@ -13,15 +13,16 @@ import numpy as np
 import OpenGL.GL as gl
 from loguru import logger
 
-from ..core import IMAGE_SIZE_MAX, IMAGE_SIZE_MIN, PROG_VERTEX, \
+from ..core import \
+    IMAGE_SIZE_MAX, IMAGE_SIZE_MIN, PROG_VERTEX, \
     PROG_FRAGMENT, PROG_FOOTER, PROG_HEADER, PTYPE, RE_VARIABLE, \
-    CompileException, \
+    CompileException, EnumEdgeWrap, \
     image_convert, parse_value
 
 from ..core.glsl_manager import GLSLManager
 
 # ==============================================================================
-# === CONSTANT ===
+# === GLOBAL ===
 # ==============================================================================
 
 LAMBDA_UNIFORM = {
@@ -37,16 +38,7 @@ LAMBDA_UNIFORM = {
 }
 
 # ==============================================================================
-# === ENUMERTATION ===
-# ==============================================================================
-
-class EnumEdgeWrap(Enum):
-    CLAMP  = 10
-    WRAP   = 20
-    MIRROR = 30
-
-# ==============================================================================
-# === SHADER ENUMERTATION ===
+# === ENUMERATION ===
 # ==============================================================================
 
 """
@@ -67,7 +59,7 @@ class EnumGLSLColorConvert(Enum):
     XYZ2LAB = 32
 
 # ==============================================================================
-# === SHADER SUPPORT ===
+# === CLASS ===
 # ==============================================================================
 
 class GLSLShader:

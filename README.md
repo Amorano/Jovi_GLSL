@@ -1,7 +1,7 @@
 <div align="center">
 
 <picture>
-  <source srcset="https://github.com/Amorano/Jovimetrix-examples/blob/master/res/jovi_glsl.png">
+  <source srcset="https://raw.githubusercontent.com/Amorano/Jovimetrix-examples/refs/heads/master/res/logo-jovi_glsl.png">
   <img alt="ComfyUI Nodes for creating GLSL shaders" width="256" height="256">
 </picture>
 
@@ -22,6 +22,17 @@
 
 <!---------------------------------------------------------------------------->
 
+# SPONSORSHIP
+
+Please consider sponsoring me if you enjoy the results of my work, code or documentation or otherwise. A good way to keep code development open and free is through sponsorship.
+
+<div align="center">
+
+&nbsp;|&nbsp;|&nbsp;|&nbsp;
+-|-|-|-
+[![BE A GITHUB SPONSOR ❤️](https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#EA4AAA)](https://github.com/sponsors/Amorano) | [![DIRECTLY SUPPORT ME VIA PAYPAL](https://img.shields.io/badge/PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/paypalme/onarom) | [![PATREON SUPPORTER](https://img.shields.io/badge/Patreon-F96854?style=for-the-badge&logo=patreon&logoColor=white)](https://www.patreon.com/joviex) | [![SUPPORT ME ON KO-FI!](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/alexandermorano)
+</div>
+
 ## HIGHLIGHTS
 
 * `Dynamic GLSL` Nodes compiles existing GLSL script files into ComfyUI nodes at load time
@@ -33,26 +44,18 @@
 
 ## UPDATES
 
+**2024/02/01** @1.0.7:
+* change all `JOV_ANY_IMAGE` to `IMAGE` type
+* registry pyproject and code cleanup
+* fix enumeration list presentation for dynamic enumerations
+* wrapping controls for transform GL programs
+
 **2024/01/31** @1.0.6:
 * fixed all tooltips
 
 **2024/01/29** @1.0.5:
 * fixed parsing bug where uniforms could be defined inside comments (issue #2)[https://github.com/Amorano/Jovi_GLSL/issues/2]
 * empty defaults will no longer complain about `None` values
-
-**2024/01/07** @1.0.3:
-* relative imports
-* node names cleaned
-
-**2024/01/05** @1.0.2:
-* reorganized imports
-
-**2024/01/04** @1.0.1:
-* removing vector nodes
-
-**2024/12/27** @1.0.0:
-* initial release
-* reworked [JOVIMETRIX](https://github.com/amorano/jovimetrix) GLSL into standalone, dynamic node system
 
 # INSTALLATION
 

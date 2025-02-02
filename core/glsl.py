@@ -6,44 +6,118 @@ GLSL
 import re
 import sys
 from typing import Any, Dict, Tuple
-from enum import Enum
 
 import torch
 from loguru import logger
 
 from comfy.utils import ProgressBar
 
-from .. import load_file
-
-from ..core import GLSL_PROGRAMS, JOV_TYPE_IMAGE, PTYPE, RE_VARIABLE, \
+from ..core import \
+    GLSL_PROGRAMS, PTYPE, RE_VARIABLE, \
     ROOT_GLSL, IMAGE_SIZE_MIN, IMAGE_SIZE_DEFAULT, IMAGE_SIZE_MAX, \
-    CompileException, JOVBaseGLSLNode, EnumConvertType, \
+    CompileException, EnumConvertType, EnumEdgeWrap, JOVImageNode, \
     cv2tensor_full, image_convert, parse_param, parse_value, \
-    tensor2cv, zip_longest_fill
+    tensor2cv, zip_longest_fill, load_file
 
 from ..core.glsl_shader import GLSLShader
+from ..core import glsl_enum as glslEnum
 
 # ==============================================================================
-# === CONSTANT ===
+# === GLOBAL ===
 # ==============================================================================
 
 RE_INCLUDE = re.compile(r"^\s*#include\s+([A-Za-z_\-\.\\\/]{3,})$", re.MULTILINE)
 RE_SHADER_META = re.compile(r"^\/\/\s?([A-Za-z_]{3,}):\s?(.+)$", re.MULTILINE)
 
 # ==============================================================================
-# === ENUMERTATION ===
+# === SUPPORT ===
 # ==============================================================================
 
-class EnumEdgeWrap(Enum):
-    CLAMP  = 10
-    WRAP   = 20
-    MIRROR = 30
+def shader_meta(shader: str) -> Dict[str, Any]:
+    ret = {}
+    for match in RE_SHADER_META.finditer(shader):
+        key, value = match.groups()
+        ret[key] = value
+    ret['_'] = [match.groups() for match in RE_VARIABLE.finditer(shader)]
+    return ret
+
+def load_file_glsl(fname: str) -> str:
+
+    # first file we load, starts the list of included
+    include = set()
+
+    def scan_include(file:str, idx:int=0) -> str:
+        if idx > 8:
+            raise CompileException(f"too many file include recursions ({idx})")
+
+        file_path = ROOT_GLSL / file
+        if file_path in include:
+            return ""
+
+        include.add(file_path)
+        try:
+            result = load_file(file_path)
+        except FileNotFoundError:
+            raise CompileException(f"File not found: {file_path}")
+
+        # replace #include directives with their content
+        def replace_include(match):
+            lib_path = ROOT_GLSL / match.group(1)
+            if lib_path not in include:
+                return scan_include(lib_path, idx+1)
+            return ""
+
+        return RE_INCLUDE.sub(replace_include, result)
+
+    return scan_include(fname)
+
+def import_dynamic() -> Tuple[str,...]:
+    ret = []
+    sort = 5000
+    root = str(ROOT_GLSL)
+    for name, fname in GLSL_PROGRAMS['fragment'].items():
+        if (shader := load_file_glsl(fname)) is None:
+            logger.error(f"missing shader file {fname}")
+            continue
+
+        meta = shader_meta(shader)
+        if meta.get('hide', False):
+            continue
+
+        name = meta.get('name', name.split('.')[0]).upper()
+        class_name = name.title().replace(' ', '_')
+        class_name = f'GLSLNode_{class_name}'
+
+        sort_order = sort
+        # put custom user nodes last
+        if fname.startswith(root):
+            sort_order -= 5000
+
+        category = GLSLNodeDynamic.CATEGORY
+        if (sub := meta.get('category', None)) is not None:
+            category += f'/{sub}'
+
+        class_def = type(class_name, (GLSLNodeDynamic,), {
+            "NAME": name,
+            "DESCRIPTION": meta.get('desc', name),
+            "CATEGORY": category.upper(),
+            "FRAGMENT": shader,
+            "PARAM": meta.get('_', []),
+            "CONTROL": [x.upper().strip() for x in meta.get('control', "").split(",") if len(x) > 0],
+            #"PASS": [x.strip() for x in meta.get('pass', "").split(",") if len(x) > 0],
+            #"OUTPUT": [x.strip() for x in meta.get('output', "").split(",") if len(x) > 0],
+            "SORT": sort_order,
+        })
+
+        sort += 10
+        ret.append((class_name, class_def,))
+    return ret
 
 # ==============================================================================
-# === COMFYUI NODE ===
+# === CLASS ===
 # ==============================================================================
 
-class GLSLNodeDynamic(JOVBaseGLSLNode):
+class GLSLNodeDynamic(JOVImageNode):
     CONTROL = []
     PARAM = []
 
@@ -133,17 +207,16 @@ class GLSLNodeDynamic(JOVBaseGLSLNode):
             params = {"default": None}
 
             d = None
-            type_name = JOV_TYPE_IMAGE
+            type_name = "IMAGE"
             if glsl_type != 'sampler2D':
                 type_name = typ.name
                 if default is not None:
                     if default.startswith('EnumGLSL'):
-                        if (target_enum := globals().get(default.strip(), None)) is not None:
+                        params['default'] = 0
+                        if (target_enum := getattr(glslEnum, default.strip(), None)) is not None:
                             # this be an ENUM....
                             type_name = target_enum._member_names_
                             params['default'] = type_name[0]
-                        else:
-                            params['default'] = 0
                     else:
                         d = default.split(',')
                         params['default'] = parse_value(d, typ, 0)
@@ -275,83 +348,3 @@ class GLSLNodeDynamic(JOVBaseGLSLNode):
             images.append(cv2tensor_full(img, matte))
             pbar.update_absolute(idx)
         return [torch.stack(i) for i in zip(*images)]
-
-def shader_meta(shader: str) -> Dict[str, Any]:
-    ret = {}
-    for match in RE_SHADER_META.finditer(shader):
-        key, value = match.groups()
-        ret[key] = value
-    ret['_'] = [match.groups() for match in RE_VARIABLE.finditer(shader)]
-    return ret
-
-def load_file_glsl(fname: str) -> str:
-
-    # first file we load, starts the list of included
-    include = set()
-
-    def scan_include(file:str, idx:int=0) -> str:
-        if idx > 8:
-            raise CompileException(f"too many file include recursions ({idx})")
-
-        file_path = ROOT_GLSL / file
-        if file_path in include:
-            return ""
-
-        include.add(file_path)
-        try:
-            result = load_file(file_path)
-        except FileNotFoundError:
-            raise CompileException(f"File not found: {file_path}")
-
-        # replace #include directives with their content
-        def replace_include(match):
-            lib_path = ROOT_GLSL / match.group(1)
-            if lib_path not in include:
-                return scan_include(lib_path, idx+1)
-            return ""
-
-        return RE_INCLUDE.sub(replace_include, result)
-
-    return scan_include(fname)
-
-def import_dynamic() -> Tuple[str,...]:
-    ret = []
-    sort = 5000
-    root = str(ROOT_GLSL)
-    for name, fname in GLSL_PROGRAMS['fragment'].items():
-        if (shader := load_file_glsl(fname)) is None:
-            logger.error(f"missing shader file {fname}")
-            continue
-
-        meta = shader_meta(shader)
-        if meta.get('hide', False):
-            continue
-
-        name = meta.get('name', name.split('.')[0]).upper()
-        class_name = name.title().replace(' ', '_')
-        class_name = f'GLSLNode_{class_name}'
-
-        sort_order = sort
-        # put custom user nodes last
-        if fname.startswith(root):
-            sort_order -= 5000
-
-        category = GLSLNodeDynamic.CATEGORY
-        if (sub := meta.get('category', None)) is not None:
-            category += f'/{sub}'
-
-        class_def = type(class_name, (GLSLNodeDynamic,), {
-            "NAME": name,
-            "DESCRIPTION": meta.get('desc', name),
-            "CATEGORY": category.upper(),
-            "FRAGMENT": shader,
-            "PARAM": meta.get('_', []),
-            "CONTROL": [x.upper().strip() for x in meta.get('control', "").split(",") if len(x) > 0],
-            #"PASS": [x.strip() for x in meta.get('pass', "").split(",") if len(x) > 0],
-            #"OUTPUT": [x.strip() for x in meta.get('output', "").split(",") if len(x) > 0],
-            "SORT": sort_order,
-        })
-
-        sort += 10
-        ret.append((class_name, class_def,))
-    return ret

@@ -21,7 +21,6 @@ app.registerExtension({
             const me = onNodeCreated?.apply(this);
             const widget_fragment = widgetFind(this.widgets, 'FRAGMENT');
             widget_fragment.options.menu = false;
-            console.info(widget_fragment)
             widgetHide(this, widget_fragment);
             return me;
         }

@@ -11,7 +11,7 @@
 """
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
-__author__ = """Alexander G. Morano"""
+__author__ = "Alexander G. Morano"
 __email__ = "amorano@gmail.com"
 
 import os
@@ -44,58 +44,6 @@ logger.configure(handlers=[{"sink": sys.stdout, "level": JOV_LOG_LEVEL}])
 JOV_PACKAGE = "JOV_GL"
 
 # ==============================================================================
-# === CORE NODES ===
-# ==============================================================================
-
-class JOVBaseNode:
-    NOT_IDEMPOTENT = True
-    CATEGORY = f"{JOV_PACKAGE} 🦚"
-    RETURN_TYPES = ("IMAGE", "IMAGE", "MASK")
-    RETURN_NAMES = ('RGBA', 'RGB', 'MASK')
-    FUNCTION = "run"
-
-    @classmethod
-    def VALIDATE_INPUTS(cls, *arg, **kw) -> bool:
-        return True
-
-    @classmethod
-    def INPUT_TYPES(cls, prompt:bool=False, extra_png:bool=False, dynprompt:bool=False) -> dict:
-        data = {
-            "required": {},
-            "optional": {},
-            "outputs": {
-                0: ("IMAGE", {"tooltips":"Full channel [RGBA] image. If there is an alpha, the image will be masked out with it when using this output."}),
-                1: ("IMAGE", {"tooltips":"Three channel [RGB] image. There will be no alpha."}),
-                2: ("MASK", {"tooltips":"Single channel mask output."}),
-            },
-            "hidden": {
-                "ident": "UNIQUE_ID"
-            }
-        }
-        if prompt:
-            data["hidden"]["prompt"] = "PROMPT"
-        if extra_png:
-            data["hidden"]["extra_pnginfo"] = "EXTRA_PNGINFO"
-
-        if dynprompt:
-            data["hidden"]["dynprompt"] = "DYNPROMPT"
-        return data
-
-# ==============================================================================
-# === TYPE ===
-# ==============================================================================
-
-class AnyType(str):
-    """AnyType input wildcard trick taken from pythongossss's:
-
-    https://github.com/pythongosssss/ComfyUI-Custom-Scripts
-    """
-    def __ne__(self, __value: object) -> bool:
-        return False
-
-JOV_TYPE_ANY = AnyType("*")
-
-# ==============================================================================
 # === SUPPORT ===
 # ==============================================================================
 
@@ -105,10 +53,6 @@ def load_file(fname: str) -> str | None:
             return f.read()
     except Exception as e:
         logger.error(e)
-
-# ==============================================================================
-# === LOADER ===
-# ==============================================================================
 
 def load_module(name: str) -> None|ModuleType:
     module = inspect.getmodule(inspect.stack()[0][0]).__name__
@@ -172,5 +116,45 @@ def loader():
     if JOV_INTERNAL:
         with open(str(ROOT) + "/node_list.json", "w", encoding="utf-8") as f:
             json.dump(NODE_LIST_MAP, f, sort_keys=True, indent=4 )
+
+# ==============================================================================
+# === CLASS ===
+# ==============================================================================
+
+class JOVBaseNode:
+    NOT_IDEMPOTENT = True
+    CATEGORY = f"{JOV_PACKAGE} 🌈"
+    RETURN_TYPES = ()
+    FUNCTION = "run"
+
+    @classmethod
+    def IS_CHANGED(cls, **kw) -> float:
+        return float('nan')
+
+    @classmethod
+    def VALIDATE_INPUTS(cls, *arg, **kw) -> bool:
+        return True
+
+    @classmethod
+    def INPUT_TYPES(cls, prompt:bool=False, extra_png:bool=False, dynprompt:bool=False) -> dict:
+        data = {
+            "optional": {},
+            "required": {},
+            "hidden": {
+                "ident": "UNIQUE_ID"
+            }
+        }
+        if prompt:
+            data["hidden"]["prompt"] = "PROMPT"
+        if extra_png:
+            data["hidden"]["extra_pnginfo"] = "EXTRA_PNGINFO"
+
+        if dynprompt:
+            data["hidden"]["dynprompt"] = "DYNPROMPT"
+        return data
+
+# ==============================================================================
+# === BOOTSTRAP ===
+# ==============================================================================
 
 loader()

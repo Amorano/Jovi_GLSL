@@ -1,6 +1,7 @@
 // name: TRANSFORM
 // desc: Move, Rotate, Scale and Tile an image
 // category: TRANSFORM
+// control: edge
 
 #include .lib/const.lib
 

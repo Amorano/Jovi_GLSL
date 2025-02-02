@@ -11,11 +11,15 @@ from loguru import logger
 from ..core import Singleton
 
 # ==============================================================================
-# === MANAGER ===
+# === SUPPORT ===
 # ==============================================================================
 
 def error_callback(error, description):
     logger.error(f"GLFW Error ({error}): {description}")
+
+# ==============================================================================
+# === CLASS ===
+# ==============================================================================
 
 class GLSLManager(metaclass=Singleton):
     """GLFW initialization and global shader resources"""

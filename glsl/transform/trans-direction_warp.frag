@@ -1,6 +1,7 @@
 // name: DIRECTIONAL WARP
 // desc: Domain warp an image with a direction and distortion map
 // category: MODIFY
+// control: edge
 
 #include .lib/const.lib
 

@@ -15,14 +15,28 @@ import torch
 import numpy as np
 from loguru import logger
 
-from .. import JOV_TYPE_ANY, ROOT, \
+from .. import \
+    ROOT, \
     JOVBaseNode, \
     load_file
 
 # ==============================================================================
-# === SHADER LOADER ===
+# === EXCEPTION ===
 # ==============================================================================
 
+class CompileException(Exception): pass
+
+# ==============================================================================
+# === GLOBAL ===
+# ==============================================================================
+
+RE_VARIABLE = re.compile(r"^uniform\s+(\w+)\s+(\w+);\s*(?:\/\/\s*([^;|]*))?\s*(?:;\s*([^;|]*))?\s*(?:;\s*([^;|]*))?\s*(?:;\s*([^;|]*))?\s*(?:;\s*([^;|]*))?\s*(?:\|\s*(.*))?$", re.MULTILINE)
+
+IMAGE_SIZE_DEFAULT: int = 512
+IMAGE_SIZE_MIN: int = 64
+IMAGE_SIZE_MAX: int = 8192
+
+# SHADER LOADER
 ROOT_GLSL = ROOT / 'glsl'
 GLSL_PROGRAMS = {
     "vertex": {  },
@@ -69,49 +83,18 @@ logger.info(f"  vertex programs: {len(GLSL_PROGRAMS['vertex'])}")
 logger.info(f"fragment programs: {len(GLSL_PROGRAMS['fragment'])}")
 
 # ==============================================================================
-# === EXCEPTION ===
+# === TYPE ===
 # ==============================================================================
 
-class CompileException(Exception): pass
+TYPE_fCOORD2D = Tuple[float, float]
 
-# ==============================================================================
-# === THERE CAN BE ONLY ONE ===
-# ==============================================================================
+TYPE_iRGB  = Tuple[int, int, int]
+TYPE_iRGBA = Tuple[int, int, int, int]
+TYPE_fRGB  = Tuple[float, float, float]
+TYPE_fRGBA = Tuple[float, float, float, float]
 
-class Singleton(type):
-    _instances = {}
-
-    def __call__(cls, *arg, **kw) -> Any:
-        # If the instance does not exist, create and store it
-        if cls not in cls._instances:
-            instance = super().__call__(*arg, **kw)
-            cls._instances[cls] = instance
-        return cls._instances[cls]
-
-# ==============================================================================
-# === CORE NODES ===
-# ==============================================================================
-
-class JOVBaseGLSLNode(JOVBaseNode):
-    NOT_IDEMPOTENT = True
-    RETURN_TYPES = ("IMAGE", "IMAGE", "MASK")
-    RETURN_NAMES = ('RGBA', 'RGB', 'MASK')
-    OUTPUT_TOOLTIPS = (
-        "Full channel [RGBA] image. If there is an alpha, the image will be masked out with it when using this output.",
-        "Three channel [RGB] image. There will be no alpha.",
-        "Single channel mask output."
-    )
-    FUNCTION = "run"
-
-# ==============================================================================
-# === CONSTANT ===
-# ==============================================================================
-
-RE_VARIABLE = re.compile(r"^uniform\s+(\w+)\s+(\w+);\s*(?:\/\/\s*([^;|]*))?\s*(?:;\s*([^;|]*))?\s*(?:;\s*([^;|]*))?\s*(?:;\s*([^;|]*))?\s*(?:;\s*([^;|]*))?\s*(?:\|\s*(.*))?$", re.MULTILINE)
-
-IMAGE_SIZE_DEFAULT: int = 512
-IMAGE_SIZE_MIN: int = 64
-IMAGE_SIZE_MAX: int = 8192
+TYPE_PIXEL = Union[int, float, TYPE_iRGB, TYPE_iRGBA, TYPE_fRGB, TYPE_fRGBA]
+TYPE_IMAGE = Union[np.ndarray, torch.Tensor]
 
 # ==============================================================================
 # === ENUMERATION ===
@@ -152,32 +135,10 @@ PTYPE = {
     'sampler2D': EnumConvertType.IMAGE
 }
 
-# ==============================================================================
-# === TYPE ===
-# ==============================================================================
-
-TYPE_fCOORD2D = Tuple[float, float]
-
-TYPE_iRGB  = Tuple[int, int, int]
-TYPE_iRGBA = Tuple[int, int, int, int]
-TYPE_fRGB  = Tuple[float, float, float]
-TYPE_fRGBA = Tuple[float, float, float, float]
-
-TYPE_PIXEL = Union[int, float, TYPE_iRGB, TYPE_iRGBA, TYPE_fRGB, TYPE_fRGBA]
-TYPE_IMAGE = Union[np.ndarray, torch.Tensor]
-
-# want to make explicit entries; comfy only looks for single type
-JOV_TYPE_COMFY = "BOOLEAN|FLOAT|INT"
-JOV_TYPE_VECTOR = "VEC2|VEC3|VEC4|VEC2INT|VEC3INT|VEC4INT|COORD2D"
-JOV_TYPE_NUMBER = f"{JOV_TYPE_COMFY}|{JOV_TYPE_VECTOR}"
-JOV_TYPE_IMAGE = "IMAGE|MASK"
-JOV_TYPE_FULL = f"{JOV_TYPE_NUMBER}|{JOV_TYPE_IMAGE}"
-
-JOV_TYPE_COMFY = JOV_TYPE_ANY
-JOV_TYPE_VECTOR = JOV_TYPE_ANY
-JOV_TYPE_NUMBER = JOV_TYPE_ANY
-JOV_TYPE_IMAGE = JOV_TYPE_ANY
-JOV_TYPE_FULL = JOV_TYPE_ANY
+class EnumEdgeWrap(Enum):
+    CLAMP  = 10
+    WRAP   = 20
+    MIRROR = 30
 
 # ==============================================================================
 # === SUPPORT ===
@@ -640,3 +601,27 @@ def image_matte(image: TYPE_IMAGE, color: TYPE_iRGBA=(0,0,0,255), width: int=Non
     else:
         image = image[y_offset:y_offset + image_height, x_offset:x_offset + image_width, :]
     return matte
+
+# ==============================================================================
+# === CLASS ===
+# ==============================================================================
+
+class Singleton(type):
+    """THERE CAN BE ONLY ONE"""
+    _instances = {}
+
+    def __call__(cls, *arg, **kw) -> Any:
+        # If the instance does not exist, create and store it
+        if cls not in cls._instances:
+            instance = super().__call__(*arg, **kw)
+            cls._instances[cls] = instance
+        return cls._instances[cls]
+
+class JOVImageNode(JOVBaseNode):
+    RETURN_TYPES = ("IMAGE", "IMAGE", "MASK")
+    RETURN_NAMES = ("RGBA", "RGB", "MASK")
+    OUTPUT_TOOLTIPS = (
+        "Full channel [RGBA] image. If there is an alpha, the image will be masked out with it when using this output.",
+        "Three channel [RGB] image. There will be no alpha.",
+        "Single channel mask output."
+    )
