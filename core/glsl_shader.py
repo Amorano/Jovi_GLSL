@@ -322,7 +322,7 @@ class GLSLShader:
                             gl.glTexParameteri(gl.GL_TEXTURE_2D, text_wrap, gl.GL_CLAMP_TO_EDGE)
 
                 gl.glUniform1i(p_loc, texture_index)
-            elif val:
+            else:
                 if isinstance(p_value, EnumType):
                     val = p_value[val].value
                 elif isinstance(val, str):

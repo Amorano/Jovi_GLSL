@@ -257,10 +257,6 @@ class GLSLNodeDynamic(JOVImageNode):
         original_params['optional'] = data
         return original_params
 
-    #@classmethod
-    #def IS_CHANGED(cls, **kw) -> float:
-    #    return float('nan')
-
     def __init__(self, *arg, **kw) -> None:
         super().__init__(*arg, **kw)
         self.__glsl = None
