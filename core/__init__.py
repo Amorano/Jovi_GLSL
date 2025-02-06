@@ -30,7 +30,7 @@ class CompileException(Exception): pass
 # === GLOBAL ===
 # ==============================================================================
 
-RE_VARIABLE = re.compile(r"^uniform\s+(\w+)\s+(\w+);\s*(?:\/\/\s*([^;|]*))?\s*(?:;\s*([^;|]*))?\s*(?:;\s*([^;|]*))?\s*(?:;\s*([^;|]*))?\s*(?:;\s*([^;|]*))?\s*(?:\|\s*(.*))?$", re.MULTILINE)
+RE_VARIABLE = re.compile(r"^\s*uniform\s+(\w+)\s+(\w+)\s*;\s*(?:\/\/\s*([^;|]*))?(?:\s*;\s*([^;|]*))?(?:\s*;\s*([^;|]*))?(?:\s*;\s*([^;|]*))?(?:\s*;\s*([^;|]*))?(?:\s*\|[\t\f ]*([^\r\n]*))?$", re.MULTILINE)
 
 IMAGE_SIZE_DEFAULT: int = 512
 IMAGE_SIZE_MIN: int = 64
