@@ -45,7 +45,7 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 ## UPDATES
 
 **2024/02/05** @1.1.0:
-* fixed value not updating when uniforms set to 0.0 (issue #4)[https://github.com/Amorano/Jovi_GLSL/issues/4#issuecomment-2638367429]
+* fixed value not updating when uniforms set to 0.0 [issue #4](https://github.com/Amorano/Jovi_GLSL/issues/4#issuecomment-2638367429)
 
 **2024/02/01** @1.0.7:
 * change all `JOV_ANY_IMAGE` to `IMAGE` type
