@@ -57,7 +57,7 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 * fixed all tooltips
 
 **2024/01/29** @1.0.5:
-* fixed parsing bug where uniforms could be defined inside comments (issue #2)[https://github.com/Amorano/Jovi_GLSL/issues/2]
+* fixed parsing bug where uniforms could be defined inside comments [issue #2](https://github.com/Amorano/Jovi_GLSL/issues/2)
 * empty defaults will no longer complain about `None` values
 
 # INSTALLATION
