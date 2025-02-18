@@ -3,10 +3,46 @@
  * Project: Jovi_GLSL
  */
 
-import { app } from "../../scripts/app.js"
-import { widgetToInput, widgetToWidget, domInnerValueChange, colorHex2RGB, colorRGB2Hex } from './util_jov.js'
-import { $el } from "../../scripts/ui.js"
+import { app } from "../../../scripts/app.js"
+import { widgetToInput, widgetToWidget } from '../util/util_widget.js'
+import { domInnerValueChange } from '../util/util.js'
+import { $el } from "../../../scripts/ui.js"
 /** @import { IWidget, LGraphCanvas } from '../../types/litegraph/litegraph.d.ts' */
+
+function isVersionLess(v1, v2) {
+    const parts1 = v1.split('.').map(Number);
+    const parts2 = v2.split('.').map(Number);
+
+    for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+        const num1 = parts1[i] || 0;
+        const num2 = parts2[i] || 0;
+        if (num1 < num2) return true;
+        if (num1 > num2) return false;
+    }
+    return false; // They are equal
+}
+
+function colorHex2RGB(hex) {
+    hex = hex.replace(/^#/, '');
+    const bigint = parseInt(hex, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return [r, g, b];
+}
+
+function colorRGB2Hex(input) {
+    const rgbArray = typeof input == 'string' ? input.match(/\d+/g) : input;
+    if (rgbArray.length < 3) {
+        throw new Error('input not 3 or 4 values');
+    }
+    const hexValues = rgbArray.map((value, index) => {
+        if (index == 3 && !value) return 'ff';
+        const hex = parseInt(value).toString(16);
+        return hex.length == 1 ? '0' + hex : hex;
+    });
+    return '#' + hexValues.slice(0, 3).join('') + (hexValues[3] || '');
+}
 
 const VectorWidget = (app, inputName, options, initial, desc='') => {
     const values = options[1]?.default || initial;
@@ -25,6 +61,10 @@ const VectorWidget = (app, inputName, options, initial, desc='') => {
         widget.options.label = ['🟥', '🟩', '🟦', 'ALPHA'];
     }
 
+    widget.options.precision = 4;
+    widget.options.step = 0.0075;
+    widget.options.round = 1 / 10 ** widget.options.step;
+
     if (options[0].endsWith('INT')) {
         widget.options.step = 1;
         widget.options.round = 1;
@@ -34,9 +74,6 @@ const VectorWidget = (app, inputName, options, initial, desc='') => {
         if (widget.options?.rgb || false) {
             widget.options.maj = 1;
         }
-        widget.options.precision = widget.options?.precision || 6;
-        widget.options.step = widget.options?.step || 0.0075;
-        widget.options.round = widget.options?.round || 1 / 10 ** widget.options.step;
     }
 
     const offset_y = 4;
@@ -88,11 +125,7 @@ const VectorWidget = (app, inputName, options, initial, desc='') => {
             // value
             ctx.fillStyle = LiteGraph.WIDGET_TEXT_COLOR
             const it = this.value[idx.toString()];
-            const precision = widget.options?.precision || 0;
-            let value = Number(it);
-            if (precision > 0) {
-                value = value.toFixed(Math.min(2, precision));
-            }
+            let value = (widget.options.precision == 0) ? Number(it) : parseFloat(it).toFixed(widget.options.precision);
             converted.push(value);
             const text = value.toString();
             ctx.fillText(text, x + element_width2 - text.length * 3.3, Y + height/2 + offset_y);
@@ -116,8 +149,7 @@ const VectorWidget = (app, inputName, options, initial, desc='') => {
     function clamp(widget, v, idx) {
         v = Math.min(v, widget.options?.maj !== undefined ? widget.options.maj : v);
         v = Math.max(v, widget.options?.mij !== undefined ? widget.options.mij : v);
-        const precision = widget.options?.precision || 0;
-        widget.value[idx] = (precision == 0) ? Number(v) : parseFloat(v).toFixed(precision);
+        widget.value[idx] = (widget.options.precision == 0) ? Number(v) : parseFloat(v).toFixed(widget.options.precision);
     }
 
     /**
@@ -265,6 +297,10 @@ app.registerExtension({
         }
     },
     async beforeRegisterNodeDef(nodeType, nodeData, app) {
+        const version = window.__COMFYUI_FRONTEND_VERSION__;
+        if (!isVersionLess(version, "1.10.3")) {
+            return;
+        }
         const myTypes = ['RGB', 'VEC2', 'VEC3', 'VEC4', 'VEC2INT', 'VEC3INT', 'VEC4INT']
         const inputTypes = nodeData.input;
         if (inputTypes) {
@@ -274,38 +310,36 @@ app.registerExtension({
                 );
 
             // CLEANUP ON REMOVE
-            if (matchingTypes.length < 1) {
-                return;
-            }
-
-            // MENU CONVERSIONS
-            const getExtraMenuOptions = nodeType.prototype.getExtraMenuOptions;
-            nodeType.prototype.getExtraMenuOptions = function (_, options) {
-                const me = getExtraMenuOptions?.apply(this, arguments);
-                const widgetToInputArray = [];
-                for (const [widgetName, additionalInfo] of matchingTypes) {
-                    const widget = Object.values(this.widgets).find(m => m.name == widgetName);
-                    if (myTypes.includes(widget.type) || widget.type.endsWith('-jov')) {
-                        if (!widget.hidden) {
-                            const widgetToInputObject = {
-                                content: `Convert ${widgetName} to input`,
-                                callback: () => widgetToInput(this, widget, additionalInfo)
-                            };
-                            widgetToInputArray.push(widgetToInputObject);
-                        } else {
-                            const widgetToInputObject = {
-                                content: `Convert ${widgetName} to widget`,
-                                callback: () => widgetToWidget(this, widget, additionalInfo)
-                            };
-                            widgetToInputArray.push(widgetToInputObject);
+            if (matchingTypes.length > 0) {
+                // MENU CONVERSIONS
+                const getExtraMenuOptions = nodeType.prototype.getExtraMenuOptions;
+                nodeType.prototype.getExtraMenuOptions = function (_, options) {
+                    const me = getExtraMenuOptions?.apply(this, arguments);
+                    const widgetToInputArray = [];
+                    for (const [widgetName, additionalInfo] of matchingTypes) {
+                        const widget = Object.values(this.widgets).find(m => m.name == widgetName);
+                        if (myTypes.includes(widget.type) || widget.type.endsWith('-jov')) {
+                            if (!widget.hidden) {
+                                const widgetToInputObject = {
+                                    content: `Convert ${widgetName} to input`,
+                                    callback: () => widgetToInput(this, widget, additionalInfo)
+                                };
+                                widgetToInputArray.push(widgetToInputObject);
+                            } else {
+                                const widgetToInputObject = {
+                                    content: `Convert ${widgetName} to widget`,
+                                    callback: () => widgetToWidget(this, widget, additionalInfo)
+                                };
+                                widgetToInputArray.push(widgetToInputObject);
+                            }
                         }
                     }
-                }
-                if (widgetToInputArray.length) {
-                    options.push(...widgetToInputArray, null);
-                }
-                return me;
-            };
+                    if (widgetToInputArray.length) {
+                        options.push(...widgetToInputArray, null);
+                    }
+                    return me;
+                };
+            }
         }
     }
 })

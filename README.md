@@ -44,6 +44,9 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
+**2024/02/18** @1.1.10:
+* updated vector widget to match Jovimetrix
+
 **2024/02/05** @1.1.02:
 * polish on regex parsing for uniforms -- supports are much more lenient on spacing
 
