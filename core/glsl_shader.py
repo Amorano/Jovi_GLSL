@@ -70,7 +70,6 @@ class GLSLShader:
         self.__size: Tuple[int, int] = (IMAGE_SIZE_MIN, IMAGE_SIZE_MIN)
         self.__textures = {}
         self.__uniform_state = {}
-        self.__texture_hashes = {}
 
         glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
         self.__window = glfw.create_window(self.__size[0], self.__size[1], "hidden", None, None)
@@ -268,9 +267,6 @@ class GLSLShader:
                 self.__empty_image = np.zeros((iResolution[0], iResolution[1]), np.uint8)
                 self.__last_frame = np.zeros((iResolution[0], iResolution[1]), np.uint8)
 
-            # Clear texture hashes to force texture updates at new size
-            self.__texture_hashes.clear()
-
             logger.debug(f"iResolution {self.__size} ==> {iResolution}")
             self.__size = iResolution
 
@@ -287,39 +283,26 @@ class GLSLShader:
                 texture_index += 1
                 if texture_id is None:
                     continue
-                    if (texture := self.__textures.get(uk, None)) is None:
-                        logger.error(f"texture [{texture_index}] {uk} is None")
-                        texture_index += 1
-                        continue
 
                 gl.glActiveTexture(gl.GL_TEXTURE0 + texture_index)
                 gl.glBindTexture(gl.GL_TEXTURE_2D, texture_id)
+                val = image_convert(val, 4)
+                val = val[::-1,:]
+                val = val.astype(np.float32) / 255.0
+                val = cv2.resize(val, self.__size, interpolation=cv2.INTER_LINEAR)
 
-                if isinstance(val, np.ndarray):
-                    current_hash = hash((val.ctypes.data, val.shape, val.dtype))
-                else:
-                    current_hash = hash(0)
+                gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA32F, self.__size[0], self.__size[1], 0, gl.GL_RGBA, gl.GL_FLOAT, val)
+                gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR)
+                gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
 
-                if uk not in self.__texture_hashes or self.__texture_hashes[uk] != current_hash:
-                    val = image_convert(val, 4)
-                    val = val[::-1,:]
-                    val = val.astype(np.float32) / 255.0
-                    val = cv2.resize(val, self.__size, interpolation=cv2.INTER_LINEAR)
-
-                    gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA32F, self.__size[0], self.__size[1], 0, gl.GL_RGBA, gl.GL_FLOAT, val)
-                    gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR)
-                    gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
-
-                    self.__texture_hashes[uk] = current_hash
-
-                    # Set edge wrapping modes
-                    for idx, text_wrap in enumerate([gl.GL_TEXTURE_WRAP_S, gl.GL_TEXTURE_WRAP_T]):
-                        if coreVar['edge'][idx] == EnumEdgeWrap.WRAP:
-                            gl.glTexParameteri(gl.GL_TEXTURE_2D, text_wrap, gl.GL_REPEAT)
-                        elif coreVar['edge'][idx] == EnumEdgeWrap.MIRROR:
-                            gl.glTexParameteri(gl.GL_TEXTURE_2D, text_wrap, gl.GL_MIRRORED_REPEAT)
-                        else:
-                            gl.glTexParameteri(gl.GL_TEXTURE_2D, text_wrap, gl.GL_CLAMP_TO_EDGE)
+                # Set edge wrapping modes
+                for idx, text_wrap in enumerate([gl.GL_TEXTURE_WRAP_S, gl.GL_TEXTURE_WRAP_T]):
+                    if coreVar['edge'][idx] == EnumEdgeWrap.WRAP:
+                        gl.glTexParameteri(gl.GL_TEXTURE_2D, text_wrap, gl.GL_REPEAT)
+                    elif coreVar['edge'][idx] == EnumEdgeWrap.MIRROR:
+                        gl.glTexParameteri(gl.GL_TEXTURE_2D, text_wrap, gl.GL_MIRRORED_REPEAT)
+                    else:
+                        gl.glTexParameteri(gl.GL_TEXTURE_2D, text_wrap, gl.GL_CLAMP_TO_EDGE)
 
                 gl.glUniform1i(p_loc, texture_index)
             else:

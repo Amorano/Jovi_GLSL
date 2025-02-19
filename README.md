@@ -44,6 +44,9 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
+**2024/02/18** @1.1.12:
+* removed over-zealous texture hashing for matching images [issue 7](https://github.com/Amorano/Jovi_GLSL/issues/7#issuecomment-2661241411)
+
 **2024/02/18** @1.1.11:
 * patched VECTOR type
 
