@@ -44,7 +44,7 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
-**2024/02/18** @1.1.13:
+**2024/02/23** @1.1.13:
 * vector fields can now be reset by clicking on the header of the field
 
 **2024/02/18** @1.1.12:
