@@ -44,6 +44,9 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
+**2024/02/18** @1.1.13:
+* vector fields can now be reset by clicking on the header of the field
+
 **2024/02/18** @1.1.12:
 * removed over-zealous texture hashing for matching images [issue 7](https://github.com/Amorano/Jovi_GLSL/issues/7#issuecomment-2661241411)
 
