@@ -3,8 +3,8 @@
  */
 
 
-import { app } from "../../../scripts/app.js"
-import { $el } from "../../../scripts/ui.js"
+import { app } from "../../scripts/app.js"
+import { $el } from "../../scripts/ui.js"
 import { widgetToInput, widgetToWidget, domInnerValueChange } from './util_jov.js'
 /** @import { IWidget, LGraphCanvas } from '../../types/litegraph/litegraph.d.ts' */
 

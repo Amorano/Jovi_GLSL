@@ -44,6 +44,9 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
+**2025/03/02** @1.1.14:
+* adjusted js import paths
+
 **2025/03/01** @1.1.13:
 * fixed all the year dates in readme since I have been writing 2024! =D
 
