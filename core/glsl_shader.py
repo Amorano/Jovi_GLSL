@@ -1,6 +1,5 @@
 """
-Jovi_GLSL - http://www.github.com/Amorano/Jovi_GLSL
-GLSL Shader
+Jovi_GLSL - GLSL Shader
 """
 
 import sys

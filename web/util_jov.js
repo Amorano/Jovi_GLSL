@@ -1,8 +1,4 @@
-/**
- * File: util_jov.js
- * Project: Jovi_GLSL
- *
- */
+/**/
 
 import { app } from "../../scripts/app.js"
 

@@ -1,6 +1,5 @@
 """
-Jovi_GLSL - http://www.github.com/Amorano/Jovi_GLSL
-GLSL Enumerations
+Jovi_GLSL - GLSL Enumerations
 """
 
 from enum import Enum

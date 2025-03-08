@@ -7,7 +7,6 @@
  ╚════╝  ╚═════╝   ╚═══╝  ╚═╝     ╚═════╝ ╚══════╝╚══════╝╚══════╝
 
                   OPENGL Shaders for ComfyUI
-            http://www.github.com/Amorano/Jovi_GLSL
 """
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]

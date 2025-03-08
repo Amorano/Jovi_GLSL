@@ -1,6 +1,5 @@
 """
-Jovi_GLSL - http://www.github.com/Amorano/Jovi_GLSL
-GLSL Manager
+Jovi_GLSL - GLSL Manager
 """
 
 import gc

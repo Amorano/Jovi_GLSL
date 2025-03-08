@@ -1,6 +1,5 @@
 """
-Jovi_GLSL - http://www.github.com/Amorano/Jovi_GLSL
-GLSL
+Jovi_GLSL - GLSL
 """
 
 import re

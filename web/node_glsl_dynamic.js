@@ -1,8 +1,4 @@
-/**
- * File: node_glsl_dynamic.js
- * Project: Jovi_GLSL
- *
- */
+/**/
 
 import { app } from "../../scripts/app.js";
 import { widgetFind, widgetHide } from './util_jov.js'
