@@ -44,6 +44,9 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
+**2025/03/18** @1.1.20:
+* vectors now convert in-line
+
 **2025/03/08** @1.1.15:
 * removed security scanner failures for in-line http links
 

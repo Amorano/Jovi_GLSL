@@ -5,6 +5,44 @@ import { $el } from "../../scripts/ui.js"
 import { widgetToInput, widgetToWidget, domInnerValueChange } from './util_jov.js'
 /** @import { IWidget, LGraphCanvas } from '../../types/litegraph/litegraph.d.ts' */
 
+const GET_CONFIG = Symbol();
+const TYPES = ['RGB', 'VEC2', 'VEC3', 'VEC4', 'VEC2INT', 'VEC3INT', 'VEC4INT']
+const TYPES_ACCEPT = 'RGB, VEC2, VEC3, VEC4, VEC2INT, VEC3INT, VEC4INT, FLOAT, INT, BOOLEAN'
+
+function convertToInput(node, widget) {
+    const input = node.addInput(widget.name, widget.type, {
+        // @ts-expect-error [GET_CONFIG] is not a valid property of IWidget
+        widget: { name: widget.name, [GET_CONFIG]: () => [
+            widget.type,
+            widget.options || {}
+        ] },
+        ...{ shape: LiteGraph.SlotShape.HollowCircle }
+    });
+    return input;
+}
+
+function removeConvertToWidgetEntries(menuArray, widgetNames) {
+    function recursiveFilter(menu) {
+        return menu.filter(item => {
+            // Keep non-matching items
+            if (!item || !item.content) return true;
+
+            // Remove this item
+            if (widgetNames.some(name => item.content === `Convert ${name} to Widget`)) {
+                return false;
+            }
+
+            // Recursively filter submenus if they exist
+            if (item.submenu && item.submenu.options) {
+                item.submenu.options = recursiveFilter(item.submenu.options);
+            }
+            return true;
+        });
+    }
+
+    return recursiveFilter(menuArray);
+}
+
 function isVersionLess(v1, v2) {
     const parts1 = v1.split('.').map(Number);
     const parts2 = v2.split('.').map(Number);
@@ -57,7 +95,7 @@ const VectorWidget = (app, inputName, options, initial, desc='') => {
         widget.options.label = ['🟥', '🟩', '🟦', 'ALPHA'];
     }
 
-    widget.options.precision = 4;
+    widget.options.precision = 3;
     widget.options.step = 0.0075;
     widget.options.round = 1 / 10 ** widget.options.step;
 
@@ -198,6 +236,7 @@ const VectorWidget = (app, inputName, options, initial, desc='') => {
             }
             if (!this.options?.rgb) return;
 
+            //const rgba = widget.value;
             const rgba = Object.values(this?.value || []);
             const color = colorRGB2Hex(rgba.slice(0, 3));
 
@@ -298,49 +337,71 @@ app.registerExtension({
         }
     },
     async beforeRegisterNodeDef(nodeType, nodeData, app) {
-        const version = window.__COMFYUI_FRONTEND_VERSION__;
-        if (!isVersionLess(version, "1.10.3")) {
+        const inputTypes = nodeData.input;
+        if (inputTypes.length == 0) {
             return;
         }
-        const myTypes = ['RGB', 'VEC2', 'VEC3', 'VEC4', 'VEC2INT', 'VEC3INT', 'VEC4INT']
-        const inputTypes = nodeData.input;
-        if (inputTypes) {
-            const matchingTypes = ['required', 'optional']
-                .flatMap(type => Object.entries(inputTypes[type] || [])
-                    .filter(([_, value]) => myTypes.includes(value[0]))
-                );
 
-            // CLEANUP ON REMOVE
-            if (matchingTypes.length > 0) {
-                // MENU CONVERSIONS
-                const getExtraMenuOptions = nodeType.prototype.getExtraMenuOptions;
-                nodeType.prototype.getExtraMenuOptions = function (_, options) {
-                    const me = getExtraMenuOptions?.apply(this, arguments);
-                    const widgetToInputArray = [];
-                    for (const [widgetName, additionalInfo] of matchingTypes) {
-                        const widget = Object.values(this.widgets).find(m => m.name == widgetName);
-                        if (myTypes.includes(widget.type) || widget.type.endsWith('-jov')) {
-                            if (!widget.hidden) {
-                                const widgetToInputObject = {
-                                    content: `Convert ${widgetName} to input`,
-                                    callback: () => widgetToInput(this, widget, additionalInfo)
-                                };
-                                widgetToInputArray.push(widgetToInputObject);
-                            } else {
-                                const widgetToInputObject = {
-                                    content: `Convert ${widgetName} to widget`,
-                                    callback: () => widgetToWidget(this, widget, additionalInfo)
-                                };
-                                widgetToInputArray.push(widgetToInputObject);
-                            }
-                        }
-                    }
-                    if (widgetToInputArray.length) {
-                        options.push(...widgetToInputArray, null);
-                    }
-                    return me;
-                };
-            }
+        const matchingTypes = ['required', 'optional']
+        .flatMap(type => Object.entries(inputTypes[type] || [])
+            .filter(([_, value]) => TYPES.includes(value[0]))
+        );
+        if (matchingTypes.length == 0) {
+            return;
         }
+
+        const getExtraMenuOptions = nodeType.prototype.getExtraMenuOptions;
+
+        const version = window.__COMFYUI_FRONTEND_VERSION__;
+        if (!isVersionLess(version, "1.10.3")) {
+            const onNodeCreated = nodeType.prototype.onNodeCreated;
+            nodeType.prototype.onNodeCreated = async function () {
+                const me = onNodeCreated?.apply(this);
+                Object.entries(this.widgets).forEach(([key, widget]) => {
+                    if (!TYPES.includes(widget.type)) {
+                        return;
+                    }
+                    convertToInput(this, widget);
+                });
+                return me;
+            }
+
+            nodeType.prototype.getExtraMenuOptions = function (_, options) {
+                const me = getExtraMenuOptions?.apply(this, arguments);
+                const widgets = matchingTypes.map(item => item[0]);
+                options = removeConvertToWidgetEntries(options, widgets);
+                console.info(options)
+                return me;
+            }
+            return;
+        }
+
+        // MENU CONVERSIONS
+        nodeType.prototype.getExtraMenuOptions = function (_, options) {
+            const me = getExtraMenuOptions?.apply(this, arguments);
+            const widgetToInputArray = [];
+            for (const [widgetName, additionalInfo] of matchingTypes) {
+                const widget = Object.values(this.widgets).find(m => m.name == widgetName);
+                if (TYPES.includes(widget.type) || widget.type.endsWith('-jov')) {
+                    if (!widget.hidden) {
+                        const widgetToInputObject = {
+                            content: `Convert ${widgetName} to input`,
+                            callback: () => widgetToInput(this, widget, additionalInfo)
+                        };
+                        widgetToInputArray.push(widgetToInputObject);
+                    } else {
+                        const widgetToInputObject = {
+                            content: `Convert ${widgetName} to widget`,
+                            callback: () => widgetToWidget(this, widget, additionalInfo)
+                        };
+                        widgetToInputArray.push(widgetToInputObject);
+                    }
+                }
+            }
+            if (widgetToInputArray.length) {
+                options.push(...widgetToInputArray, null);
+            }
+            return me;
+        };
     }
 })
