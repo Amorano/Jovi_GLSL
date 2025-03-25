@@ -216,7 +216,7 @@ def parse_value(val:Any, typ:EnumConvertType, default: Any,
         val = default
 
     if isinstance(val, dict):
-        # old index?
+        # old jovimetrix index?
         if '0' in val or 0 in val:
             val = [val.get(i, val.get(str(i), 0)) for i in range(min(len(val), 4))]
         # coord2d?
@@ -241,8 +241,6 @@ def parse_value(val:Any, typ:EnumConvertType, default: Any,
 
         if not isinstance(val, (list, tuple, torch.Tensor)):
             val = [val]
-        elif isinstance(val, (tuple, )):
-            val = list(val)
 
         size = max(1, int(typ.value / 10))
         new_val = []
@@ -350,15 +348,14 @@ def parse_param(data:dict, key:str, typ:EnumConvertType, default: Any,
     val = data.get(key, default)
     if typ == EnumConvertType.ANY:
         if val is None:
-            val = [default]
-            return val
-        elif isinstance(val, (list,)):
-            val = val[0]
+            return [default]
+        #elif isinstance(val, (list,)):
+        #    val = val[0]
 
     if isinstance(val, (str,)):
         try: val = json.loads(val.replace("'", '"'))
         except json.JSONDecodeError: pass
-    # see if we are a hacked vector blob... {0:x, 1:y, 2:z, 3:w}
+    # see if we are a Jovimetrix hacked vector blob... {0:x, 1:y, 2:z, 3:w}
     elif isinstance(val, dict):
         # mixlab layer?
         if (image := val.get('image', None)) is not None:
