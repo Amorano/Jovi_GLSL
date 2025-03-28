@@ -44,6 +44,9 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
+**2025/03/28** @1.1.27:
+* updated requirements for numpy to only be >=1.26.4
+
 **2025/03/27** @1.1.26:
 * added a bloom filter
 
@@ -55,12 +58,6 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 **2025/03/08** @1.1.15:
 * removed security scanner failures for in-line http links
-
-**2025/03/02** @1.1.14:
-* adjusted js import paths
-
-**2025/03/01** @1.1.13:
-* fixed all the year dates in readme since I have been writing 2024! =D
 
 # INSTALLATION
 
