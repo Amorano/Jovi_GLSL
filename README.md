@@ -44,6 +44,9 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
+**2025/03/27** @1.1.26:
+* added a bloom filter
+
 **2025/03/18** @1.1.25:
 * dunno how to work around comfyui not doing type conversion
 
@@ -58,37 +61,6 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 **2025/03/01** @1.1.13:
 * fixed all the year dates in readme since I have been writing 2024! =D
-
-**2025/02/23** @1.1.13:
-* vector fields can now be reset by clicking on the header of the field
-
-**2025/02/18** @1.1.12:
-* removed over-zealous texture hashing for matching images [issue 7](https://github.com/Amorano/Jovi_GLSL/issues/7#issuecomment-2661241411)
-
-**2025/02/18** @1.1.11:
-* patched VECTOR type
-
-**2025/02/18** @1.1.10:
-* updated vector widget to match Jovimetrix
-
-**2025/02/05** @1.1.02:
-* polish on regex parsing for uniforms -- supports are much more lenient on spacing
-
-**2025/02/05** @1.1.0:
-* fixed value not updating when uniforms set to 0.0 [issue #4](https://github.com/Amorano/Jovi_GLSL/issues/4#issuecomment-2638367429)
-
-**2025/02/01** @1.0.7:
-* change all `JOV_ANY_IMAGE` to `IMAGE` type
-* registry pyproject and code cleanup
-* fix enumeration list presentation for dynamic enumerations
-* wrapping controls for transform GL programs
-
-**2025/01/31** @1.0.6:
-* fixed all tooltips
-
-**2025/01/29** @1.0.5:
-* fixed parsing bug where uniforms could be defined inside comments [issue #2](https://github.com/Amorano/Jovi_GLSL/issues/2)
-* empty defaults will no longer complain about `None` values
 
 # INSTALLATION
 

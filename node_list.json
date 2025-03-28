@@ -1,5 +1,6 @@
 {
     "BLEND LINEAR (JOV_GL)": "Simple linear blend between two images",
+    "BLOOM (JOV_GL)": "Bloom filter pass",
     "COLOR CONVERSION (JOV_GL)": "Convert an image from one color space (RGB, HSV, LAB, XYZ) to another",
     "COLOR PALETTE (JOV_GL)": "Color palette creation using the formula: color(t) = a + b * cos[tau(c*t+d)]",
     "CONICAL GRADIENT (JOV_GL)": "Generate a conical gradient from black to white",
