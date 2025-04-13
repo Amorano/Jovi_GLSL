@@ -1,22 +1,29 @@
-"""
-Jovi_GLSL - GLSL
-"""
+""" Jovi_GLSL - GLSL """
 
 import re
 import sys
 from typing import Any, Dict, Tuple
 
-import torch
-from loguru import logger
-
 from comfy.utils import ProgressBar
 
+from cozy_comfyui import \
+    logger, TensorType, \
+    IMAGE_SIZE_MIN, IMAGE_SIZE_DEFAULT, IMAGE_SIZE_MAX, \
+    RGBAMaskType, EnumConvertType, \
+    load_file, parse_value, parse_param, zip_longest_fill
+
+from cozy_comfyui.node import \
+    CozyImageNode
+
+from cozy_comfyui.image.convert import \
+    cv_to_tensor_full, tensor_to_cv
+
+from cozy_comfyui.image.misc import \
+    image_stack
+
 from ..core import \
-    GLSL_PROGRAMS, PTYPE, RE_VARIABLE, \
-    ROOT_GLSL, IMAGE_SIZE_MIN, IMAGE_SIZE_DEFAULT, IMAGE_SIZE_MAX, \
-    CompileException, EnumConvertType, EnumEdgeWrap, JOVImageNode, \
-    cv2tensor_full, image_convert, parse_param, parse_value, \
-    tensor2cv, zip_longest_fill, load_file
+    GLSL_PROGRAMS, PTYPE, RE_VARIABLE, ROOT_GLSL, \
+    CompileException, EnumEdgeWrap
 
 from ..core.glsl_shader import GLSLShader
 from ..core import glsl_enum as glslEnum
@@ -116,7 +123,7 @@ def import_dynamic() -> Tuple[str,...]:
 # === CLASS ===
 # ==============================================================================
 
-class GLSLNodeDynamic(JOVImageNode):
+class GLSLNodeDynamic(CozyImageNode):
     CONTROL = []
     PARAM = []
 
@@ -260,7 +267,7 @@ class GLSLNodeDynamic(JOVImageNode):
         super().__init__(*arg, **kw)
         self.__glsl = None
 
-    def run(self, ident, **kw) -> Tuple[torch.Tensor]:
+    def run(self, ident, **kw) -> RGBAMaskType:
         # IRES, MATTE, EDGE, IFRAME, IFRAMERATE, ITIME, BATCH, SEED
         iResolution = parse_param(kw, 'iRes', EnumConvertType.VEC2INT,
                                   [(IMAGE_SIZE_DEFAULT, IMAGE_SIZE_DEFAULT)],
@@ -295,35 +302,29 @@ class GLSLNodeDynamic(JOVImageNode):
 
             self.__glsl = GLSLShader(self, vertex, fragment)
 
-        for k, var in variables.items():
-            variables[k] = var if isinstance(var, (list, )) else [var]
+        for k in variables.keys():
+            variables[k] = parse_param(variables, k, EnumConvertType.ANY, None)
+            batch = max(batch, len(variables[k]))
 
-        # if the batch == 0 then we want an automagic frame step
-        if batch == 0:
-            iTime = [iFrame[0] / iFrameRate[0]]
-        else:
-            start_frame = iFrame[0]
-            for x in range(batch):
-                iFrame.append(start_frame + x)
-            iTime = [frame/rate for (frame, rate) in list(zip_longest_fill(iFrame, iFrameRate))]
+        start_frame = iFrame[0]
+        for x in range(1, batch):
+            iFrame.append(start_frame + x)
+        iTime = [frame/rate for (frame, rate) in list(zip_longest_fill(iFrame, iFrameRate))]
 
         images = []
         # iResolution, iFrame, iFrameRate, iTime, iSeed
         params = list(zip_longest_fill(iResolution, iFrame, iFrameRate, iTime, matte, edge, seed))
         pbar = ProgressBar(len(params))
-        #logger.debug(f"batch size {batch} :: param count {len(params)}")
-        #logger.debug(params)
+        logger.debug(f"batch size {batch} :: param count {len(params)}")
         for idx, (iResolution, iFrame, iFrameRate, iTime, matte, edge, seed) in enumerate(params):
             vars = {}
             firstImage = None
-            for k, val in variables.items():
-                vars[k] = val[idx % len(val)]
-                # convert images, grab first one if no sizes provided
-                if isinstance(vars[k], (torch.Tensor,)):
-                    vars[k] = vars[k][idx % len(val)]
-                    vars[k] = image_convert(tensor2cv(vars[k]), 4)
+            for k in variables.keys():
+                vars[k] = variables[k][idx % len(variables[k])]
+                if isinstance(vars[k], (TensorType,)):
+                    vars[k] = tensor_to_cv(vars[k])
                     if firstImage is None and 'iRes' not in self.CONTROL:
-                        firstImage = True #vars[k].shape[:2][::-1]
+                        firstImage = True
                         iResolution = vars[k].shape[:2][::-1]
 
             coreVar = {
@@ -336,10 +337,8 @@ class GLSLNodeDynamic(JOVImageNode):
                 'edge': edge,
                 'seed': seed
             }
-            #logger.debug(coreVar)
-            #logger.debug(vars)
 
             img = self.__glsl.render(coreVar, **vars)
-            images.append(cv2tensor_full(img, matte))
+            images.append(cv_to_tensor_full(img, matte))
             pbar.update_absolute(idx)
-        return [torch.stack(i) for i in zip(*images)]
+        return image_stack(images)

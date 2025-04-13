@@ -1,13 +1,14 @@
-"""
-Jovi_GLSL - GLSL Manager
-"""
+""" Jovi_GLSL - GLSL Manager """
 
 import gc
 
 import glfw
-from loguru import logger
 
-from ..core import Singleton
+from cozy_comfyui import \
+    logger
+
+from cozy_comfyui.node import \
+    Singleton
 
 # ==============================================================================
 # === SUPPORT ===

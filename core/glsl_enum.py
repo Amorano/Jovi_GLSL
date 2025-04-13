@@ -1,6 +1,4 @@
-"""
-Jovi_GLSL - GLSL Enumerations
-"""
+""" Jovi_GLSL - GLSL Enumerations """
 
 from enum import Enum
 

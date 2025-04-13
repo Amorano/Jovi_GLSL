@@ -1,6 +1,4 @@
-"""
-Jovi_GLSL - GLSL Shader
-"""
+""" Jovi_GLSL - GLSL Shader """
 
 import sys
 from typing import Any, Dict, Tuple
@@ -10,13 +8,18 @@ import cv2
 import glfw
 import numpy as np
 import OpenGL.GL as gl
-from loguru import logger
+
+from cozy_comfyui import \
+    logger, \
+    IMAGE_SIZE_MIN, IMAGE_SIZE_MAX, \
+    parse_value
+
+from cozy_comfyui.image.convert import \
+    image_convert
 
 from ..core import \
-    IMAGE_SIZE_MAX, IMAGE_SIZE_MIN, PROG_VERTEX, \
-    PROG_FRAGMENT, PROG_FOOTER, PROG_HEADER, PTYPE, RE_VARIABLE, \
-    CompileException, EnumEdgeWrap, \
-    image_convert, parse_value
+    PROG_VERTEX, PROG_FRAGMENT, PROG_FOOTER, PROG_HEADER, PTYPE, RE_VARIABLE, \
+    CompileException, EnumEdgeWrap
 
 from ..core.glsl_manager import GLSLManager
 

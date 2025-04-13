@@ -1,7 +1,7 @@
 [project]
 name = "jovi_glsl"
 description = "ComfyUI Nodes that integrate GLSL shader support."
-version = "1.1.27"
+version = "1.1.30"
 license = { file = "LICENSE" }
 readme = "README.md"
 authors = [{ name = "Alexander G. Morano", email = "amorano@gmail.com" }]
@@ -17,10 +17,9 @@ classifiers = [
 requires-python = ">=3.11"
 dependencies = [
     "aenum>=3.1.15",
+    "git+https://github.com/cozy-comfyui/cozy_comfyui@main#egg=cozy_comfyui",
     "glfw",
-    "loguru",
-    "numpy>=1.26.4,<2.0.0; python_version < '3.12'",
-    "numpy>=2.0.0; python_version > '3.11'",
+    "numpy<2",
     "opencv-contrib-python",
     "PyOpenGL",
     "PyOpenGL-accelerate>=3.1.7; python_version < '3.12'"
