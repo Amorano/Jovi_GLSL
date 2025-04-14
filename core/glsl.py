@@ -99,7 +99,8 @@ def import_dynamic() -> Tuple[str,...]:
         if fname.startswith(root):
             sort_order -= 5000
 
-        category = GLSLNodeDynamic.CATEGORY
+        # category = GLSLNodeDynamic.CATEGORY
+        category = "JOV_GL"
         if (sub := meta.get('category', None)) is not None:
             category += f'/{sub}'
 
