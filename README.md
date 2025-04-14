@@ -44,6 +44,9 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
+**2025/04/14** @1.1.31:
+* force fixed import problem in comfyui
+
 **2025/04/13** @1.1.30:
 * core supports switched to [cozy_comfyui](https://github.com/cozy-comfyui/cozy_comfyui)
 * updated requirements for numpy to be < 2.0.0
