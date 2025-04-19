@@ -44,6 +44,9 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
+**2025/04/19** @1.1.32:
+* removed old vector conversions waiting for new frontend mechanism
+
 **2025/04/14** @1.1.31:
 * force fixed import problem in comfyui
 
