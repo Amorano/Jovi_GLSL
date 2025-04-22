@@ -100,9 +100,7 @@ def import_dynamic() -> Tuple[str,...]:
             sort_order -= 5000
 
         # category = GLSLNodeDynamic.CATEGORY
-        category = "JOV_GL 🌈"
-        if (sub := meta.get('category', None)) is not None:
-            category += f'/{sub}'
+        category = meta.get('category', "")
 
         class_def = type(class_name, (GLSLNodeDynamic,), {
             "NAME": name,

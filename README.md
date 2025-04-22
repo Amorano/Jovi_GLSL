@@ -44,6 +44,9 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
+**2025/04/22** @1.1.33:
+* realigned categories
+
 **2025/04/19** @1.1.32:
 * removed old vector conversions waiting for new frontend mechanism
 
@@ -56,18 +59,6 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 **2025/03/28** @1.1.27:
 * updated requirements for numpy to only be >=1.26.4
-
-**2025/03/27** @1.1.26:
-* added a bloom filter
-
-**2025/03/18** @1.1.25:
-* dunno how to work around comfyui not doing type conversion
-
-**2025/03/18** @1.1.20:
-* vectors now convert in-line
-
-**2025/03/08** @1.1.15:
-* removed security scanner failures for in-line http links
 
 # INSTALLATION
 

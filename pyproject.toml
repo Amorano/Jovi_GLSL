@@ -1,7 +1,7 @@
 [project]
 name = "jovi_glsl"
 description = "ComfyUI Nodes that integrate GLSL shader support."
-version = "1.1.32"
+version = "1.1.33"
 license = { file = "LICENSE" }
 readme = "README.md"
 authors = [{ name = "Alexander G. Morano", email = "amorano@gmail.com" }]
