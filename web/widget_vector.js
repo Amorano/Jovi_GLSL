@@ -2,8 +2,30 @@
 
 import { app } from "../../scripts/app.js"
 import { $el } from "../../scripts/ui.js"
-import { domInnerValueChange } from './util_jov.js'
 /** @import { IWidget, LGraphCanvas } from '../../types/litegraph/litegraph.d.ts' */
+
+function arrayToObject(values, length, parseFn) {
+    const result = {};
+    for (let i = 0; i < length; i++) {
+        result[i] = parseFn(values[i]);
+    }
+    return result;
+}
+
+function domInnerValueChange(node, pos, widget, value, event=undefined) {
+    //const numtype = widget.type.includes("INT") ? Number : parseFloat
+    widget.value = arrayToObject(value, Object.keys(value).length, widget.convert);
+    if (
+        widget.options &&
+        widget.options.property &&
+        node.properties[widget.options.property] !== undefined
+        ) {
+            node.setProperty(widget.options.property, widget.value)
+        }
+    if (widget.callback) {
+        widget.callback(widget.value, app.canvas, node, pos, event)
+    }
+}
 
 function colorHex2RGB(hex) {
     hex = hex.replace(/^#/, '');
@@ -32,13 +54,24 @@ const VectorWidget = (app, inputName, options, initial) => {
     /** @type {IWidget} */
     const widget = {
         name: inputName,
-        type2: options[0],
+        //type2: options[0],
         type: options[0],
         y: 0,
         value: values,
         options: options[1]
     }
-    //widget.options.type = "STRING"; //`BOOLEAN,INT,FLOAT,${options[0]}`;
+
+    widget.convert = parseFloat;
+    widget.options.precision = 3;
+    widget.options.step = 0.01;
+    widget.options.round = 1 / 10 ** widget.options.step;
+
+    if (widget.options?.rgb || widget.options?.int || false) {
+        widget.options.step = 1;
+        widget.options.round = 1;
+        widget.options.precision = 0;
+        widget.convert = Number;
+    }
 
     if (widget.options?.rgb || false) {
         widget.options.maj = 255;
@@ -46,31 +79,18 @@ const VectorWidget = (app, inputName, options, initial) => {
         widget.options.label = ['🟥', '🟩', '🟦', 'ALPHA'];
     }
 
-    widget.options.precision = 3;
-    widget.options.step = 0.0075;
-    widget.options.round = 1 / 10 ** widget.options.step;
-
-    if (widget.type2.endsWith('INT')) {
-        widget.options.step = 1;
-        widget.options.round = 1;
-        widget.options.precision = 0;
-        widget.options.step = 1;
-    } else {
-        if (widget.options?.rgb || false) {
-            widget.options.maj = 1;
-        }
-    }
-
     const offset_y = 4;
     const widget_padding_left = 13;
     const widget_padding = 30;
     const label_full = 72;
-    const label_center = label_full/2;
+    const label_center = label_full / 2;
+
     /** @type {HTMLInputElement} */
     let picker;
 
     widget.draw = function(ctx, node, width, Y, height) {
-        if ((app.canvas.ds.scale < 0.50) || (!this.type2.startsWith("VEC") && this.type2 != "COORD2D")) return;
+        // if ((app.canvas.ds.scale < 0.50) || (!this.type2.startsWith("VEC") && this.type2 != "COORD2D")) return;
+        if ((app.canvas.ds.scale < 0.50) || (!this.type.startsWith("VEC"))) return;
         ctx.save()
         ctx.beginPath()
         ctx.lineWidth = 1
@@ -273,15 +293,6 @@ app.registerExtension({
                 widget: node.addCustomWidget(VectorWidget(app, inputName, inputData, [0, 0, 0])),
             }),
             VEC4: (node, inputName, inputData, app) => ({
-                widget: node.addCustomWidget(VectorWidget(app, inputName, inputData, [0, 0, 0, 0])),
-            }),
-            VEC2INT: (node, inputName, inputData, app) => ({
-                widget: node.addCustomWidget(VectorWidget(app, inputName, inputData, [0, 0])),
-            }),
-            VEC3INT: (node, inputName, inputData, app) => ({
-                widget: node.addCustomWidget(VectorWidget(app, inputName, inputData, [0, 0, 0])),
-            }),
-            VEC4INT: (node, inputName, inputData, app) => ({
                 widget: node.addCustomWidget(VectorWidget(app, inputName, inputData, [0, 0, 0, 0])),
             })
         }

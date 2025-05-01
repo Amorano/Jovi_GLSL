@@ -133,9 +133,9 @@ class GLSLNodeDynamic(CozyImageNode):
         original_params = super().INPUT_TYPES()
         optional = original_params.get('optional', {})
         if 'RES' in cls.CONTROL:
-            optional["iRes"] = ("VEC2INT", {
+            optional["iRes"] = ("VEC2", {
                 "default": (IMAGE_SIZE_DEFAULT, IMAGE_SIZE_DEFAULT),
-                "mij":IMAGE_SIZE_MIN, "label": ['W', 'H'],
+                "mij":IMAGE_SIZE_MIN, "label": ['W', 'H'], "int": True,
                 "tooltip": "Width and Height as a Vector2 Integer (x, y)"
             })
 
@@ -164,7 +164,7 @@ class GLSLNodeDynamic(CozyImageNode):
             })
 
         if 'MATTE' in cls.CONTROL:
-            optional["matte"] = ("VEC4INT", {
+            optional["matte"] = ("VEC4", {
                 "default": (0, 0, 0, 255),
                 "rgb": True,
                 "tooltip": "Define a background color for padding. Useful when images do not fit and need a filler color"
@@ -215,6 +215,13 @@ class GLSLNodeDynamic(CozyImageNode):
             type_name = "IMAGE"
             if glsl_type != 'sampler2D':
                 type_name = typ.name
+                if type_name == "VEC2INT":
+                    type_name = "VEC2"
+                elif type_name == "VEC3INT":
+                    type_name = "VEC3"
+                elif type_name == "VEC4INT":
+                    type_name = "VEC4"
+
                 if default is not None:
                     if default.startswith('EnumGLSL'):
                         params['default'] = 0
@@ -243,15 +250,18 @@ class GLSLNodeDynamic(CozyImageNode):
                     params[minmax('maj', 'max')] = parse_value(val_max, EnumConvertType.FLOAT, sys.maxsize)
 
                 if val_step is not None:
-                    d = 1 if typ.name.endswith('INT') else 0.01
+                    d = 0.01
+                    params['precision'] = 3
+                    if typ.name.endswith('INT'):
+                        d = 1
+                        params['precision'] = 0
                     params['step'] = parse_value(val_step, EnumConvertType.FLOAT, d)
 
                 if meta is not None:
                     if "rgb" in meta:
-                        if glsl_type.startswith('vec'):
-                            params['linear'] = True
-                        else:
-                            params['rgb'] = True
+                         params['rgb'] = True
+                    elif "linear" in meta:
+                        params['linear'] = True
 
             if tooltip is not None:
                 params["tooltip"] = tooltip
@@ -314,7 +324,7 @@ class GLSLNodeDynamic(CozyImageNode):
         # iResolution, iFrame, iFrameRate, iTime, iSeed
         params = list(zip_longest_fill(iResolution, iFrame, iFrameRate, iTime, matte, edge, seed))
         pbar = ProgressBar(len(params))
-        logger.debug(f"batch size {batch} :: param count {len(params)}")
+        # logger.debug(f"batch size {batch} :: param count {len(params)}")
         for idx, (iResolution, iFrame, iFrameRate, iTime, matte, edge, seed) in enumerate(params):
             vars = {}
             firstImage = None

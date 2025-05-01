@@ -2,10 +2,10 @@
 // desc: Bloom filter pass
 // category: FILTER
 
-uniform sampler2D image; // | RGB(A) image
-uniform float threshold; // 0.25; 0; 1; 0.01; | Brightness threshold to start the bloom effect
-uniform float intensity; // 2; 0; 200; 0.1; | Ramp up to intensity of bloom
-uniform float blurSize;  // 3; 0; 100; 0.1; | Number of pixels to fade effect across
+uniform sampler2D image; //                    | RGB(A) image
+uniform float threshold; // 0.25; 0; 1;   0.01 | Brightness threshold to start the bloom effect
+uniform float intensity; // 2;    0; 200; 0.01 | Ramp up to intensity of bloom
+uniform float blurSize;  // 3;    0; 100; 0.01 | Number of pixels to fade effect across
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {

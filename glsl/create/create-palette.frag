@@ -12,14 +12,20 @@
 
 #include .lib/const.lib
 
-uniform vec3 bias;  // 0.5,0.5,0.5;0 | scale and bias (dc offset)
-uniform vec3 amp;   // 0.5,0.5,0.5   | contrast and brightness (amplitude)
-uniform vec3 freq;  // 1,1,1         | color cycle (R, G and B) (frequency)
-uniform vec3 phase; // 0,0,0         | starting offset for the cycle
+uniform vec3 bias;     // 0.5,0.5,0.5;0 | scale and bias (dc offset)
+uniform vec3 amp;      // 0.5,0.5,0.5   | contrast and brightness (amplitude)
+uniform vec3 freq;     // 1,1,1         | color cycle (R, G and B) (frequency)
+uniform vec3 phase;    // 0,0,0         | starting offset for the cycle
+uniform bool vertical; //               | if the gradient is top-bottom
+uniform bool reverse;  //               | reverse the starting direction
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
 	vec2 uv = fragCoord.xy / iResolution.xy;
-    vec3 col = bias + amp * cos(M_PI * (freq * uv.x + phase));
+	float pos = vertical ? uv.y : uv.x;
+	if (reverse) {
+        pos = 1.0 - pos;
+    }
+    vec3 col = bias + amp * cos(M_PI * (freq * pos + phase));
 	fragColor = vec4(col, 1.0);
 }
