@@ -44,6 +44,9 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
+**2025/05/05** @1.1.35:
+* cozy_comfyui updated to 0.0.21
+
 **2025/05/01** @1.1.34:
 * cleaned up old JS supports
 * new comfy-cozy version
