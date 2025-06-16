@@ -44,6 +44,9 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
+**2025/05/16** @1.1.36:
+* updated to comfy_cozy 0.0.25
+
 **2025/05/05** @1.1.35:
 * cozy_comfyui updated to 0.0.21
 

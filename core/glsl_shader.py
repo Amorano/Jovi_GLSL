@@ -286,6 +286,10 @@ class GLSLShader:
                 if texture_id is None:
                     continue
 
+                if not isinstance(val, (np.ndarray,)):
+                    # print(uk, val, p_type, p_loc, p_value, texture_id)
+                    continue
+
                 gl.glActiveTexture(gl.GL_TEXTURE0 + texture_index)
                 gl.glBindTexture(gl.GL_TEXTURE_2D, texture_id)
                 val = image_convert(val, 4)

@@ -3,8 +3,8 @@
 // category: CREATE
 // control: res,
 
-uniform ivec4 start;   // 0,0,0,255;       0; 255;; rgb | start color
-uniform ivec4 end;     // 255,255,255,255; 0; 255;; rgb | end color
+uniform vec4 start;   // 0,0,0,255;       0; 255;; rgb  | start color
+uniform vec4 end;     // 255,255,255,255; 0; 255;; rgb  | end color
 uniform bool vertical; //                               | if the gradient is top-bottom
 uniform bool reverse;  //                               | reverse the starting direction
 

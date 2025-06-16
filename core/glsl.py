@@ -159,7 +159,7 @@ class GLSLNodeDynamic(CozyImageNode):
 
         if 'BATCH' in cls.CONTROL:
             optional["batch"] = ("INT", {
-                "default": 0, "min": 0, "max": sys.maxsize,
+                "default": 1, "min": 1, "max": sys.maxsize,
                 "tooltip": "Number of frames to generate. 0 (continuous mode) means continue from the last queue generating the next single frame based on iFrameRate. In the shader this will be the index of the batch iteration or 0."
             })
 
@@ -206,21 +206,21 @@ class GLSLNodeDynamic(CozyImageNode):
         data = {}
         # if cls.PARAM is not None:
         # 1., 1., 1.; 0; 1; 0.01; rgb | End of the Range
+        # ;;;; mask | mask image
         # default, min, max, step, metadata, tooltip
         for glsl_type, name, default, val_min, val_max, val_step, meta, tooltip in cls.PARAM:
             typ = PTYPE[glsl_type]
             params = {"default": None}
 
             d = None
-            type_name = "IMAGE"
-            if glsl_type != 'sampler2D':
+            type_name = "IMAGE,MASK"
+            if glsl_type == 'sampler2D':
+                if meta is not None and "mask" in meta:
+                    type_name = "MASK"
+                else:
+                    type_name = "IMAGE"
+            else:
                 type_name = typ.name
-                if type_name == "VEC2INT":
-                    type_name = "VEC2"
-                elif type_name == "VEC3INT":
-                    type_name = "VEC3"
-                elif type_name == "VEC4INT":
-                    type_name = "VEC4"
 
                 if default is not None:
                     if default.startswith('EnumGLSL'):

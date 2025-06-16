@@ -7,7 +7,7 @@
 
 uniform sampler2D image; //                        | RGB(A) input to repeat
 uniform vec2 offset;     // 0.0,0.0;-0.5;0.5;0.001 | positional offset (-0.5..0.5)
-uniform float rotate;    // 0;0;1;0.001            | rotation from 0..2pi
+uniform float rotate;    // 0;;;0.001              | rotation from 0..2pi
 uniform vec2 tile;       // 1.0,1.0;1;2048;1       | repetitions on X and Y
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
@@ -16,8 +16,10 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     vec2 uv = (fragCoord - offset * iResolution.xy) / iResolution.xy;
 
     // rotation matrix
-    float cosAngle = cos(rotate * M_TAU);
-    float sinAngle = sin(rotate * M_TAU);
+    // a - (b * floor(a / b))
+    float rotate_rad = mod(rotate, 360.) / 360.;
+    float cosAngle = cos(rotate_rad * M_TAU);
+    float sinAngle = sin(rotate_rad * M_TAU);
     mat2 rotationMatrix = mat2(cosAngle, -sinAngle, sinAngle, cosAngle);
 
 	// center rotate, scale

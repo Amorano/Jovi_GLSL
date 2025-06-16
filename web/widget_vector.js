@@ -54,7 +54,6 @@ const VectorWidget = (app, inputName, options, initial) => {
     /** @type {IWidget} */
     const widget = {
         name: inputName,
-        //type2: options[0],
         type: options[0],
         y: 0,
         value: values,
@@ -62,8 +61,8 @@ const VectorWidget = (app, inputName, options, initial) => {
     }
 
     widget.convert = parseFloat;
-    widget.options.precision = 3;
-    widget.options.step = 0.01;
+    widget.options.precision = widget.options?.precision || 2;
+    widget.options.step = widget.options?.step || 0.01;
     widget.options.round = 1 / 10 ** widget.options.step;
 
     if (widget.options?.rgb || widget.options?.int || false) {
@@ -184,30 +183,24 @@ const VectorWidget = (app, inputName, options, initial) => {
                         try {
                             v = eval(v);
                         } catch {
-                            // Suppressed exception
+                            v = old_value[index];
                         }
+                    } else {
+                        v = old_value[index];
                     }
+
                     if (this.value[index] != v) {
                         setTimeout(
                             function () {
                                 clamp(this, v, index);
                                 domInnerValueChange(node, pos, this, this.value, eUp);
-                            }.bind(this), 20)
+                            }.bind(this), 5)
                     }
                 }.bind(this), eUp);
-
-                if (old_value != this.value) {
-                    setTimeout(
-                        function () {
-                            domInnerValueChange(node, pos, this, this.value, eUp);
-                        }.bind(this), 20);
-                }
-
-                return
+                return;
             }
             if (!this.options?.rgb) return;
 
-            //const rgba = widget.value;
             const rgba = Object.values(this?.value || []);
             const color = colorRGB2Hex(rgba.slice(0, 3));
 
@@ -260,24 +253,22 @@ const VectorWidget = (app, inputName, options, initial) => {
 
         pointer.onDrag = (eMove) => {
             if (!eMove.deltaX || !(index > -1)) return;
-
+            if (index >= size) return;
             let v = parseFloat(this.value[index]);
             v += this.options.step * Math.sign(eMove.deltaX);
             clamp(this, v, index);
+            if (widget.callback) {
+                widget.callback(widget.value, app.canvas, node)
+            }
         }
     }
 
-    widget.serializeValue = async () => {
-        const value = widget.value;
-        if (value === null) {
-            return null;
-        }
-
-        if (Array.isArray(value)) {
-            return value.reduce((acc, tuple, index) => ({ ...acc, [index]: tuple }), {});
-        }
-        return value;
-    }
+    widget.serializeValue = async (node, index) => {
+        const rawValues = Array.isArray(widget.value)
+            ? widget.value
+            : Object.values(widget.value);
+        return rawValues.map(v => parseFloat(v));
+    };
 
     return widget;
 }
