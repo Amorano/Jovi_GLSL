@@ -2,336 +2,50 @@
 #define LIB_NOISE_HASH
 
 //------------------------------------------------------------------------------
-// SUPPORT
-//------------------------------------------------------------------------------
-
-uvec2 floatToBits(vec2 v) {
-    return uvec2(floatBitsToUint(v.x), floatBitsToUint(v.y));
-}
-
-uvec3 floatToBits(vec3 v) {
-    return uvec3(floatBitsToUint(v.x), floatBitsToUint(v.y), floatBitsToUint(v.z));
-}
-
-uvec4 floatToBits(vec4 v) {
-    return uvec4(floatBitsToUint(v.x), floatBitsToUint(v.y), floatBitsToUint(v.z), floatBitsToUint(v.w));
-}
-
-//------------------------------------------------------------------------------
 // HASH NOISE
 //------------------------------------------------------------------------------
 
-uint hashMurmur_11(uint src, uint seed) {
-    const uint M = 0x5bd1e995u;
-    uint h = seed;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
+vec2 noise_hash(vec2 p, uint seed) {
+    // Base fract transform on position only
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
 
-// 1 output, 1 input
-float hash11(float src, uint seed) {
-    uint h = hashMurmur_11(floatBitsToUint(src), seed);
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
+    // Mix in seed parts scaled down to small floats for precision-safe entropy injection
+    float seedA = float((seed & 0xFFu)) * 0.0001;
+    float seedB = float(((seed >> 8) & 0xFFu)) * 0.0007;
+    float seedC = float(((seed >> 16) & 0xFFu)) * 0.0003;
 
-//------------------------------------------------------------------------------
-
-uint hashMurmur_12(uvec2 src, uint seed) {
-    const uint M = 0x5bd1e995u;
-    uint h = seed;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src.x; h *= M; h ^= src.y;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-// 1 output, 2 inputs
-float hash12(vec2 src, uint seed) {
-    uint h = hashMurmur_12(floatToBits(src), seed);
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
-
-//------------------------------------------------------------------------------
-
-uint hashMurmur_13(uvec3 src, uint seed) {
-    const uint M = 0x5bd1e995u;
-    uint h = seed;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src.x; h *= M; h ^= src.y; h *= M; h ^= src.z;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-// 1 output, 3 inputs
-float hash13(vec3 src, uint seed) {
-    uint h = hashMurmur_13(floatToBits(src), seed);
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
-
-//------------------------------------------------------------------------------
-
-uint hashMurmur_14(uvec4 src, uint seed) {
-    const uint M = 0x5bd1e995u;
-    uint h = seed;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src.x; h *= M; h ^= src.y; h *= M; h ^= src.z; h *= M; h ^= src.w;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-// 1 output, 4 inputs
-float hash14(vec4 src, uint seed) {
-    uint h = hashMurmur_14(floatToBits(src), seed);
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
-
-//------------------------------------------------------------------------------
-
-uvec2 hashMurmur_21(uint src, uvec2 seed) {
-    const uint M = 0x5bd1e995u;
-    uvec2 h = seed;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-// 2 outputs, 1 input
-vec2 hash21(float src, uvec2 seed) {
-    uvec2 h = hashMurmur_21(floatBitsToUint(src), seed);
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
-
-//------------------------------------------------------------------------------
-
-uvec2 hashMurmur_22(uvec2 src, uvec2 seed) {
-    const uint M = 0x5bd1e995u;
-    uvec2 h = seed;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src.x; h *= M; h ^= src.y;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-// 2 outputs, 2 inputs
-vec2 hash22(vec2 src, uvec2 seed) {
-    uvec2 h = hashMurmur_22(floatToBits(src), seed);
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
-
-//------------------------------------------------------------------------------
-
-uvec2 hashMurmur_23(uvec3 src, uvec2 seed) {
-    const uint M = 0x5bd1e995u;
-    uvec2 h = seed;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src.x; h *= M; h ^= src.y; h *= M; h ^= src.z;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-// 2 outputs, 3 inputs
-vec2 hash23(vec3 src, uvec2 seed) {
-    uvec2 h = hashMurmur_23(floatToBits(src), seed);
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
-
-//------------------------------------------------------------------------------
-
-uvec2 hashMurmur_24(uvec4 src, uvec2 seed) {
-    const uint M = 0x5bd1e995u;
-    uvec2 h = seed;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src.x; h *= M; h ^= src.y; h *= M; h ^= src.z; h *= M; h ^= src.w;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-// 2 outputs, 4 inputs
-vec2 hash24(vec4 src, uvec2 seed) {
-    uvec2 h = hashMurmur_24(floatToBits(src), seed);
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
-
-//------------------------------------------------------------------------------
-
-uvec3 hashMurmur_31(uint src, uvec3 seed) {
-    const uint M = 0x5bd1e995u;
-    uvec3 h = seed;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-// 3 outputs, 1 input
-vec3 hash31(float src, uvec3 seed) {
-    uvec3 h = hashMurmur_31(floatBitsToUint(src), seed);
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
-
-//------------------------------------------------------------------------------
-
-uvec3 hashMurmur_32(uvec2 src, uvec3 seed) {
-    const uint M = 0x5bd1e995u;
-    uvec3 h = seed;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src.x; h *= M; h ^= src.y;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-// 3 outputs, 2 inputs
-vec3 hash32(vec2 src, uvec3 seed) {
-    uvec3 h = hashMurmur_32(floatToBits(src), seed);
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
-
-//------------------------------------------------------------------------------
-
-uvec3 hashMurmur_33(uvec3 src, uvec3 seed) {
-    const uint M = 0x5bd1e995u;
-    uvec3 h = seed;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src.x; h *= M; h ^= src.y; h *= M; h ^= src.z;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-// 3 outputs, 3 inputs
-vec3 hash33(vec3 src, uvec3 seed) {
-    uvec3 h = hashMurmur_33(floatToBits(src), seed);
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
-
-//------------------------------------------------------------------------------
-
-uvec3 hashMurmur_34(uvec4 src, uvec3 seed) {
-    const uint M = 0x5bd1e995u;
-    uvec3 h = seed;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src.x; h *= M; h ^= src.y; h *= M; h ^= src.z; h *= M; h ^= src.w;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-// 3 outputs, 4 inputs
-vec3 hash34(vec4 src, uvec3 seed) {
-    uvec3 h = hashMurmur_34(floatToBits(src), seed);
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
-
-//------------------------------------------------------------------------------
-
-uvec4 hashMurmur_41(uint src, uvec4 seed) {
-    const uint M = 0x5bd1e995u;
-    uvec4 h = seed;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-// 4 outputs, 1 input
-vec4 hash41(float src, uvec4 seed) {
-    uvec4 h = hashMurmur_41(floatBitsToUint(src), seed);
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
-
-//------------------------------------------------------------------------------
-
-uvec4 hashMurmur_42(uvec2 src, uvec4 seed) {
-    const uint M = 0x5bd1e995u;
-    uvec4 h = seed;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src.x; h *= M; h ^= src.y;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-// 4 outputs, 2 inputs
-vec4 hash42(vec2 src, uvec4 seed) {
-    uvec4 h = hashMurmur_42(floatToBits(src), seed);
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
-
-//------------------------------------------------------------------------------
-
-uvec4 hashMurmur_43(uvec3 src, uvec4 seed) {
-    const uint M = 0x5bd1e995u;
-    uvec4 h = seed;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src.x; h *= M; h ^= src.y; h *= M; h ^= src.z;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-// 4 outputs, 3 inputs
-vec4 hash43(vec3 src, uvec4 seed) {
-    uvec4 h = hashMurmur_43(floatToBits(src), seed);
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
-
-//------------------------------------------------------------------------------
-
-uvec4 hashMurmur_44(uvec4 src, uvec4 seed) {
-    const uint M = 0x5bd1e995u;
-    uvec4 h = seed;
-    src *= M; src ^= src>>24u; src *= M;
-    h *= M; h ^= src.x; h *= M; h ^= src.y; h *= M; h ^= src.z; h *= M; h ^= src.w;
-    h ^= h>>13u; h *= M; h ^= h>>15u;
-    return h;
-}
-
-// 4 outputs, 4 inputs
-vec4 hash44(vec4 src, uvec4 seed) {
-    uvec4 h = hashMurmur_44(floatToBits(src), seed);
-    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
-}
-
-//------------------------------------------------------------------------------
-// STANDARD HASH NOISE
-//------------------------------------------------------------------------------
-
-float noise_hash(int n) {
-    n = (n << 13) ^ n;
-    return float( (n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 0x7fffffff;
-}
-
-// Basic 1D hash - maps float to float [0,1]
-float noise_hash11(float p) {
-    p = fract(p * .1031);
-    p *= p + 33.33;
-    return fract(p * p);
-}
-
-// 2D to 1D hash - maps vec2 to float [0,1]
-float noise_hash21(vec2 p) {
-    vec3 p3 = fract(vec3(p.xyx) * .1031);
+    p3 += seedA + seedB + seedC;
     p3 += dot(p3, p3.yzx + 33.33);
-    return fract((p3.x + p3.y) * p3.z);
+
+    return fract(vec2(p3.x + p3.y, p3.y + p3.z));
 }
 
-// 3D to 3D hash - maps vec3 to vec3 [0,1]
-vec3 noise_hash33(vec3 p) {
-    p = fract(p * vec3(443.8975, 397.2973, 491.1871));
-    p += dot(p.zxy, p.yxz + 19.19);
-    return fract(vec3(p.x * p.y, p.y * p.z, p.z * p.x));
+vec3 noise_hash(vec3 p, uint seed) {
+    p = fract(p * 0.1031);
+
+    float seedA = float((seed & 0xFFu)) * 0.0001;
+    float seedB = float(((seed >> 8) & 0xFFu)) * 0.0007;
+    float seedC = float(((seed >> 16) & 0xFFu)) * 0.0003;
+
+    p += seedA + seedB + seedC;
+    p += dot(p, p.yzx + 33.33);
+
+    return fract((p.xxy + p.yzz) * p.zyx);
 }
 
-vec3 noise_hash33_2(vec3 p) {
-    p = vec3( dot(p,vec3(127.1,311.7, 74.7)),
-            dot(p,vec3(269.5,183.3,246.1)),
-            dot(p,vec3(113.5,271.9,124.6)));
-    return fract(sin(p)*43758.5453123);
+vec4 noise_hash(vec4 p, uint seed) {
+    p = fract(p * 0.1031);
+
+    float seedA = float((seed & 0xFFu)) * 0.0001;
+    float seedB = float(((seed >> 8) & 0xFFu)) * 0.0007;
+    float seedC = float(((seed >> 16) & 0xFFu)) * 0.0003;
+    float seedD = float(((seed >> 24) & 0xFFu)) * 0.0005;
+
+    p += seedA + seedB + seedC + seedD;
+    p += dot(p, p.wzxy + 33.33);
+
+    return fract((p.xxyz + p.yzzw) * p.wzyx);
 }
 
-vec3 noise_hash33_3(vec3 p3) {
-    p3 = fract(p3 * vec3(10.31, 10.3, 9.73));
-    p3 += dot(p3, p3.yxz+33.33);
-    return fract((p3.xxy + p3.yxx)*p3.zyx);
-}
 
 #endif

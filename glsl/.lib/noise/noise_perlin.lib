@@ -2,118 +2,94 @@
 #define LIB_NOISE_PERLIN
 
 #include .lib/noise/noise_hash.lib
+#include .lib/noise/noise_grad.lib
 #include .lib/noise/noise_param.lib
 
 //------------------------------------------------------------------------------
 // NOISE PERLIN
 //------------------------------------------------------------------------------
 
-vec2 gradient2D(uint hash) {
-    switch (int(hash) & 7) {
-        case 0: return vec2(1, 0);
-        case 1: return vec2(-1, 0);
-        case 2: return vec2(0, 1);
-        case 3: return vec2(0, -1);
-        case 4: return normalize(vec2(1, 1));
-        case 5: return normalize(vec2(-1, 1));
-        case 6: return normalize(vec2(1, -1));
-        case 7: return normalize(vec2(-1, -1));
-        default: return vec2(0);
-    }
-}
-
-vec3 gradient3D(uint hash) {
-    // look at the last four bits to pick a gradient direction
-    switch (int(hash) & 15) {
-        case 0: return vec3(1, 1, 0);
-        case 1: return vec3(-1, 1, 0);
-        case 2: return vec3(1, -1, 0);
-        case 3: return vec3(-1, -1, 0);
-        case 4: return vec3(1, 0, 1);
-        case 5: return vec3(-1, 0, 1);
-        case 6: return vec3(1, 0, -1);
-        case 7: return vec3(-1, 0, -1);
-        case 8: return vec3(0, 1, 1);
-        case 9: return vec3(0, -1, 1);
-        case 10: return vec3(0, 1, -1);
-        case 11: return vec3(0, -1, -1);
-        case 12: return vec3(1, 1, 0);
-        case 13: return vec3(-1, 1, 0);
-        case 14: return vec3(0, -1, 1);
-        case 15: return vec3(0, -1, -1);
-        default: return vec2(0);
-    }
-}
-
-vec4 gradient4D(uint hash) {
-    int h = int(hash) & 31;
-    return normalize(vec4(
-        ((h & 1) == 0) ? 1.0 : -1.0,
-        ((h & 2) == 0) ? 1.0 : -1.0,
-        ((h & 4) == 0) ? 1.0 : -1.0,
-        ((h & 8) == 0) ? 1.0 : -1.0
-    ));
-}
-
 // Generate 2D Perlin noise
 float noise_perlin(vec2 p, uint seed) {
     vec2 i = floor(p);
     vec2 f = p - i;
-    uvec2 cellSeed = uvec2(seed);
 
-    float a =  dot(gradient2D(hash22(i, cellSeed)), f);
-    float b =  dot(gradient2D(hash22((i + vec2(1., 0.)), cellSeed)), f - vec2(1., 0.));
-    float c =  dot(gradient2D(hash22((i + vec2(0., 1.)), cellSeed)), f - vec2(0., 1.));
-    float d =  dot(gradient2D(hash22((i + vec2(1., 1.)), cellSeed)), f - vec2(1., 1.));
+    float a =  dot(gradient2D(noise_hash(i, seed)), f);
+    float b =  dot(gradient2D(noise_hash((i + vec2(1., 0.)), seed)), f - vec2(1., 0.));
+    float c =  dot(gradient2D(noise_hash((i + vec2(0., 1.)), seed)), f - vec2(0., 1.));
+    float d =  dot(gradient2D(noise_hash((i + vec2(1., 1.)), seed)), f - vec2(1., 1.));
 
-    vec2 u = smoothstep(0., 1., f);
+    //vec2 u = smoothstep(0., 1., f);
+    vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
     return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
 }
 
-// 3D Perlin Noise function
 float noise_perlin(vec3 p, uint seed) {
     vec3 i = floor(p);
     vec3 f = p - i;
-    uvec3 cellSeed = uvec3(seed);
 
-    float a =  dot(gradient3D(hash33(i, cellSeed)), f);
-    float b =  dot(gradient3D(hash33((i + vec3(1., 0., 0.)), cellSeed)), f - vec3(1., 0., 0.));
-    float c =  dot(gradient3D(hash33((i + vec3(0., 1., 0.)), cellSeed)), f - vec3(0., 1., 0.));
-    float d =  dot(gradient3D(hash33((i + vec3(1., 1., 0.)), cellSeed)), f - vec3(1., 1., 0.));
-    float e =  dot(gradient3D(hash33((i + vec3(0., 0., 1.)), cellSeed)), f - vec3(0., 0., 1.));
-    float f0 = dot(gradient3D(hash33((i + vec3(1., 0., 1.)), cellSeed)), f - vec3(1., 0., 1.));
-    float g0 = dot(gradient3D(hash33((i + vec3(0., 1., 1.)), cellSeed)), f - vec3(0., 1., 1.));
-    float h0 = dot(gradient3D(hash33((i + vec3(1., 1., 1.)), cellSeed)), f - vec3(1., 1., 1.));
+    float n000 = dot(gradient3D(noise_hash(i + vec3(0, 0, 0), seed)), f - vec3(0, 0, 0));
+    float n100 = dot(gradient3D(noise_hash(i + vec3(1, 0, 0), seed)), f - vec3(1, 0, 0));
+    float n010 = dot(gradient3D(noise_hash(i + vec3(0, 1, 0), seed)), f - vec3(0, 1, 0));
+    float n110 = dot(gradient3D(noise_hash(i + vec3(1, 1, 0), seed)), f - vec3(1, 1, 0));
+    float n001 = dot(gradient3D(noise_hash(i + vec3(0, 0, 1), seed)), f - vec3(0, 0, 1));
+    float n101 = dot(gradient3D(noise_hash(i + vec3(1, 0, 1), seed)), f - vec3(1, 0, 1));
+    float n011 = dot(gradient3D(noise_hash(i + vec3(0, 1, 1), seed)), f - vec3(0, 1, 1));
+    float n111 = dot(gradient3D(noise_hash(i + vec3(1, 1, 1), seed)), f - vec3(1, 1, 1));
 
-    vec3 u = smoothstep(0., 1., f);
-    return mix(mix(mix(a, b, u.x), mix(c, d, u.x), u.y), mix(mix(e, f0, u.x), mix(g0, h0, u.x), u.y), u.z);
+    vec3 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+
+    return mix(
+        mix(mix(n000, n100, u.x), mix(n010, n110, u.x), u.y),
+        mix(mix(n001, n101, u.x), mix(n011, n111, u.x), u.y),
+        u.z
+    );
 }
 
-// 4D Perlin Noise function
 float noise_perlin(vec4 p, uint seed) {
     vec4 i = floor(p);
     vec4 f = p - i;
-    uvec4 cellSeed = uvec4(seed);
 
-    float a =  dot(gradient4D(hash44(i, cellSeed)), f);
-    float b =  dot(gradient4D(hash44((i + vec4(1, 0, 0, 0)), cellSeed)), f - vec4(1., 0., 0., 0.));
-    float c =  dot(gradient4D(hash44((i + vec4(0, 1, 0, 0)), cellSeed)), f - vec4(0., 1., 0., 0.));
-    float d =  dot(gradient4D(hash44((i + vec4(1, 1, 0, 0)), cellSeed)), f - vec4(1., 1., 0., 0.));
-    float e =  dot(gradient4D(hash44((i + vec4(0, 0, 1, 0)), cellSeed)), f - vec4(0., 0., 1., 0.));
-    float f0 = dot(gradient4D(hash44((i + vec4(1, 0, 1, 0)), cellSeed)), f - vec4(1., 0., 1., 0.));
-    float g0 = dot(gradient4D(hash44((i + vec4(0, 1, 1, 0)), cellSeed)), f - vec4(0., 1., 1., 0.));
-    float h0 = dot(gradient4D(hash44((i + vec4(1, 1, 1, 0)), cellSeed)), f - vec4(1., 1., 1., 0.));
-    float i1 = dot(gradient4D(hash44((i + vec4(0, 0, 0, 1)), cellSeed)), f - vec4(0., 0., 0., 1.));
-    float j1 = dot(gradient4D(hash44((i + vec4(1, 0, 0, 1)), cellSeed)), f - vec4(1., 0., 0., 1.));
-    float k1 = dot(gradient4D(hash44((i + vec4(0, 1, 0, 1)), cellSeed)), f - vec4(0., 1., 0., 1.));
-    float l1 = dot(gradient4D(hash44((i + vec4(1, 1, 0, 1)), cellSeed)), f - vec4(1., 1., 0., 1.));
-    float m1 = dot(gradient4D(hash44((i + vec4(0, 0, 1, 1)), cellSeed)), f - vec4(0., 0., 1., 1.));
-    float n1 = dot(gradient4D(hash44((i + vec4(1, 0, 1, 1)), cellSeed)), f - vec4(1., 0., 1., 1.));
-    float o1 = dot(gradient4D(hash44((i + vec4(0, 1, 1, 1)), cellSeed)), f - vec4(0., 1., 1., 1.));
-    float p1 = dot(gradient4D(hash44((i + vec4(1, 1, 1, 1)), cellSeed)), f - vec4(1., 1., 1., 1.));
+    #define DOT(off) dot(gradient4D(noise_hash(i + off, seed)), f - off)
 
-    vec3 u = smoothstep(0., 1., f);
-    return mix(mix(mix(a, b, u.x), mix(c, d, u.x), u.y), mix(mix(e, f0, u.x), mix(g0, h0, u.x), u.y), u.z);
+    float n0000 = DOT(vec4(0, 0, 0, 0));
+    float n1000 = DOT(vec4(1, 0, 0, 0));
+    float n0100 = DOT(vec4(0, 1, 0, 0));
+    float n1100 = DOT(vec4(1, 1, 0, 0));
+    float n0010 = DOT(vec4(0, 0, 1, 0));
+    float n1010 = DOT(vec4(1, 0, 1, 0));
+    float n0110 = DOT(vec4(0, 1, 1, 0));
+    float n1110 = DOT(vec4(1, 1, 1, 0));
+
+    float n0001 = DOT(vec4(0, 0, 0, 1));
+    float n1001 = DOT(vec4(1, 0, 0, 1));
+    float n0101 = DOT(vec4(0, 1, 0, 1));
+    float n1101 = DOT(vec4(1, 1, 0, 1));
+    float n0011 = DOT(vec4(0, 0, 1, 1));
+    float n1011 = DOT(vec4(1, 0, 1, 1));
+    float n0111 = DOT(vec4(0, 1, 1, 1));
+    float n1111 = DOT(vec4(1, 1, 1, 1));
+
+    vec4 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+
+    float x00 = mix(n0000, n1000, u.x);
+    float x10 = mix(n0100, n1100, u.x);
+    float x01 = mix(n0010, n1010, u.x);
+    float x11 = mix(n0110, n1110, u.x);
+    float x00_1 = mix(n0001, n1001, u.x);
+    float x10_1 = mix(n0101, n1101, u.x);
+    float x01_1 = mix(n0011, n1011, u.x);
+    float x11_1 = mix(n0111, n1111, u.x);
+
+    float y0 = mix(x00, x10, u.y);
+    float y1 = mix(x01, x11, u.y);
+    float y0_1 = mix(x00_1, x10_1, u.y);
+    float y1_1 = mix(x01_1, x11_1, u.y);
+
+    float z0 = mix(y0, y1, u.z);
+    float z1 = mix(y0_1, y1_1, u.z);
+
+    return mix(z0, z1, u.w);
 }
 
 //------------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 #define LIB_NOISE_GRAD
 
 //------------------------------------------------------------------------------
-// GRADIENT COMPUTATION
+// GRADIENT (GENERIC)
 // Core gradient calculation functions used by noise algorithms
 //------------------------------------------------------------------------------
 
@@ -14,5 +14,39 @@ GRAD(float)
 GRAD(vec2)
 GRAD(vec3)
 GRAD(vec4)
+
+//------------------------------------------------------------------------------
+// GRADIENT
+// Core gradient calculation functions used by noise algorithms
+//------------------------------------------------------------------------------
+
+vec2 gradient2D(vec2 h) {
+    // Convert [0,1] -> angle in radians
+    float angle = 6.2831853 * fract(h.x + h.y);
+    return vec2(cos(angle), sin(angle));
+}
+
+vec3 gradient3D(vec3 h) {
+    float theta = 6.2831853 * h.x;
+    float phi   = acos(2.0 * h.y - 1.0);
+    return vec3(
+        sin(phi) * cos(theta),
+        sin(phi) * sin(theta),
+        cos(phi)
+    );
+}
+
+vec4 gradient4D(vec4 h) {
+    float theta1 = 6.2831853 * h.x;
+    float theta2 = 6.2831853 * h.y;
+    float r1 = sqrt(1.0 - h.z);
+    float r2 = sqrt(h.z);
+    return vec4(
+        r1 * cos(theta1),
+        r1 * sin(theta1),
+        r2 * cos(theta2),
+        r2 * sin(theta2)
+    );
+}
 
 #endif

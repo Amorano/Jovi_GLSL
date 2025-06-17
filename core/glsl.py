@@ -126,7 +126,7 @@ class GLSLNodeDynamic(CozyImageNode):
     CONTROL = []
     PARAM = []
 
-    # res, frame. framerate, time, batch, matte, edge, batch, seed
+    # res, frame. framerate, time, matte, edge, seed, batch
 
     @classmethod
     def INPUT_TYPES(cls) -> dict:
@@ -155,12 +155,6 @@ class GLSLNodeDynamic(CozyImageNode):
             optional["iTime"] = ("INT", {
                 "default": -1, "min": -1, "max": sys.maxsize,
                 "tooltip": "Value to use directly; if > -1 will override iFrame/iFrameRate calculation."
-            })
-
-        if 'BATCH' in cls.CONTROL:
-            optional["batch"] = ("INT", {
-                "default": 1, "min": 1, "max": sys.maxsize,
-                "tooltip": "Number of frames to generate. 0 (continuous mode) means continue from the last queue generating the next single frame based on iFrameRate. In the shader this will be the index of the batch iteration or 0."
             })
 
         if 'MATTE' in cls.CONTROL:
@@ -195,6 +189,12 @@ class GLSLNodeDynamic(CozyImageNode):
             optional["seed"] = ("INT", {
                 "default": 0, "min": 0, "max": sys.maxsize,
                 "tooltip": "Number of frames to generate. 0 (continuous mode) means continue from the last queue generating the next single frame based on iFrameRate."
+            })
+
+        if 'BATCH' in cls.CONTROL:
+            optional["batch"] = ("INT", {
+                "default": 1, "min": 1, "max": sys.maxsize,
+                "tooltip": "Number of frames to generate. 0 (continuous mode) means continue from the last queue generating the next single frame based on iFrameRate. In the shader this will be the index of the batch iteration or 0."
             })
 
         """
@@ -277,7 +277,7 @@ class GLSLNodeDynamic(CozyImageNode):
         self.__glsl = None
 
     def run(self, ident, **kw) -> RGBAMaskType:
-        # IRES, MATTE, EDGE, IFRAME, IFRAMERATE, ITIME, BATCH, SEED
+        # IRES, MATTE, EDGE, IFRAME, IFRAMERATE, ITIME, SEED, BATCH
         iResolution = parse_param(kw, 'iRes', EnumConvertType.VEC2INT,
                                   [(IMAGE_SIZE_DEFAULT, IMAGE_SIZE_DEFAULT)],
                                   IMAGE_SIZE_MIN, IMAGE_SIZE_MAX)

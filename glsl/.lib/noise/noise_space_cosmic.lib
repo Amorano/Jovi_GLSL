@@ -16,7 +16,7 @@ float noise_cosmicWeb(vec2 p, float scale) {
     for(int y = -1; y <= 1; y++) {
         for(int x = -1; x <= 1; x++) {
             vec2 offset = vec2(x, y);
-            vec2 pos = offset + noise_hash33(vec3(id + offset, 0.0)).xy;
+            vec2 pos = offset + noise_hash(vec3(id + offset, 0.0)).xy;
             min_dist = min(min_dist, length(f - pos));
         }
     }

@@ -44,6 +44,13 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
+**2025/06/16** @1.1.37:
+* overhaul of perlin noise
+* batch processing moved to fore-front
+* speed attribute for noise
+* noise offset changed to vec2 for 2d noise
+* batch attribute moved to bottom of noises
+
 **2025/05/16** @1.1.36:
 * updated to comfy_cozy 0.0.25
 

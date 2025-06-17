@@ -8,11 +8,11 @@
 //------------------------------------------------------------------------------
 
 // Generate high-quality blue noise
-float noise_blue(vec2 uv int seed) {
+float noise_blue(vec2 uv uint seed) {
     vec3 p = vec3(uv, 0.0);
     float t = fract(0.0);
-    vec3 n1 = noise_hash3(floor(p), seed);
-    vec3 n2 = noise_hash3(ceil(p), seed);
+    vec3 n1 = noise_hash(floor(p), seed);
+    vec3 n2 = noise_hash(ceil(p), seed);
     return mix(n1.x, n2.x, smoothstep(0.0, 1.0, t));
 }
 
