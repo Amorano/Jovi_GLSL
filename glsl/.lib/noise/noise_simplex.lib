@@ -19,7 +19,7 @@ MOD289(vec3)
 MOD289(vec4)
 
 #define PERMUTE(vec_type) vec_type permute(const in vec_type x, int seed) { \
-    return mod289(((x * 34.0 + noise_hash(seed)) + 1.0) * x); \
+    return mod289(((x * 34.0 + noise_hash(x, seed)) + 1.0) * x); \
 }
 
 PERMUTE(float)
@@ -41,7 +41,7 @@ vec4 grad4(float j, vec4 ip, int seed)
     const vec4 ones = vec4(1.0, 1.0, 1.0, -1.0);
     vec4 p,s;
 
-    p.xyz = floor(fract(vec3(j + noise_hash(seed)) * ip.xyz) * 7.0) * ip.z - 1.0;
+    p.xyz = floor(fract(vec3(j + noise_hash(ip, seed)) * ip.xyz) * 7.0) * ip.z - 1.0;
     p.w = 1.5 - dot(abs(p.xyz), ones.xyz);
     s = vec4(lessThan(p, vec4(0.0)));
     p.xyz = p.xyz + (s.xyz*2.0 - 1.0) * s.www;

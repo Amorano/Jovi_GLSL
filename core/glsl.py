@@ -291,10 +291,9 @@ class GLSLNodeDynamic(CozyImageNode):
         iFrame = parse_param(kw, 'iFrame', EnumConvertType.FLOAT, 0)
         iFrameRate = parse_param(kw, 'iFrameRate', EnumConvertType.INT, 24)
         iTime = parse_param(kw, 'iTime', EnumConvertType.INT, -1)
-
-        # batch is a single value entry -- drives everyone else.
-        batch = parse_param(kw, 'batch', EnumConvertType.INT, 0, 0, 1048576)[0]
         seed = parse_param(kw, 'seed', EnumConvertType.INT, 0)
+        # batch is a single value entry -- drives everyone else.
+        batch = parse_param(kw, 'batch', EnumConvertType.INT, 1, 1, 1048576)[0]
 
         variables = kw.copy()
         for k in ['iRes', 'iFrame', 'iFrameRate', 'iTime', 'matte', 'edge_x', 'edge_y', 'batch', 'seed']:

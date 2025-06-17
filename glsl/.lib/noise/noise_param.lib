@@ -11,8 +11,8 @@ struct NoiseParams {
     int   octaves;     // Number of octaves
     float lacunarity;  // Frequency multiplier per octave
     float persistence; // Amplitude multiplier per octave (same as 'gain' in some functions)
-    float offset;      // For ridge noise
-    int   seed;        // Seed
+    vec4  offset;      // Positional offset
+    uint  seed;        // Seed
 };
 
 NoiseParams defaultNoiseParams() {
@@ -22,7 +22,7 @@ NoiseParams defaultNoiseParams() {
     params.octaves = 4;
     params.lacunarity = 2.0;
     params.persistence = 0.5;
-    params.offset = 1.0;
+    params.offset = vec4(0,0,0,0);
     params.seed = 0;
     return params;
 }
