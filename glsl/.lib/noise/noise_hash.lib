@@ -5,6 +5,24 @@
 // HASH NOISE
 //------------------------------------------------------------------------------
 
+float noise_hash(float p, uint seed) {
+    // Scale and fract for base entropy
+    float fp = fract(p * 0.1031);
+
+    // Inject seed entropy (scaled to low float ranges)
+    float seedA = float((seed & 0xFFu)) * 0.0001;
+    float seedB = float(((seed >> 8) & 0xFFu)) * 0.0007;
+    float seedC = float(((seed >> 16) & 0xFFu)) * 0.0003;
+    float seedD = float(((seed >> 24) & 0xFFu)) * 0.0005;
+
+    fp += seedA + seedB + seedC + seedD;
+
+    // Final nonlinear mixing
+    fp += dot(vec2(fp, fp), vec2(fp + 33.33, fp + 17.17));
+
+    return fract(fp);
+}
+
 vec2 noise_hash(vec2 p, uint seed) {
     // Base fract transform on position only
     vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -46,6 +64,5 @@ vec4 noise_hash(vec4 p, uint seed) {
 
     return fract((p.xxyz + p.yzzw) * p.wzyx);
 }
-
 
 #endif

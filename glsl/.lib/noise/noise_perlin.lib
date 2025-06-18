@@ -102,7 +102,7 @@ float noise_perlin(vec4 p, uint seed) {
     float amplitude = params.amplitude; \
     uint currentSeed = params.seed; \
     for(int i = 0; i < min(params.octaves, MAX_OCTAVES); i++) { \
-        value += amplitude * noise_perlin(p * frequency, currentSeed); \
+        value += amplitude * noise_perlin(p * frequency, currentSeed + i); \
         frequency *= params.lacunarity; \
         amplitude *= params.persistence; \
     } \

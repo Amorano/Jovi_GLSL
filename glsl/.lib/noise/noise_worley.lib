@@ -1,22 +1,24 @@
 #ifndef LIB_NOISE_WORLEY
 #define LIB_NOISE_WORLEY
 
-#include .lib/noise/noise_rand.lib
+#include .lib/noise/noise_hash.lib
 
 //------------------------------------------------------------------------------
 // NOISE WORLEY
 //------------------------------------------------------------------------------
 
 // 2D Worley noise function (Cellular noise)
-float noise_worley(vec2 p, int num_cells) {
-    vec2  i = floor(p);
-    vec2  f = fract(p);
-    float d = 1.0; // Initial distance (for min distance to feature points)
+float noise_worley(vec2 p, int num_cells, uint seed) {
+    vec2 i = floor(p);
+    vec2 f = p - i;
+    float d = 1.0;
 
     for (int x = -num_cells; x <= num_cells; ++x) {
         for (int y = -num_cells; y <= num_cells; ++y) {
             vec2  cell   = vec2(float(x), float(y));
-            vec2  point  = cell + vec2(noise_rand(i + cell), noise_rand(i + cell + vec2(42.0, 17.0)));
+            vec2  point  = cell + vec2(
+                            noise_hash(i + cell, seed).x,
+                            noise_hash(i + cell + vec2(42.0, 17.0), seed).y);
             vec2  offset = point - f;
             float len    = length(offset);
             d = min(d, len);
@@ -27,18 +29,19 @@ float noise_worley(vec2 p, int num_cells) {
 }
 
 // 3D Worley noise function (Cellular noise)
-float noise_worley(vec3 p, int num_cells) {
-    vec3  i = floor(p);
-    vec3  f = fract(p);
+float noise_worley(vec3 p, int num_cells, uint seed) {
+    vec3 i = floor(p);
+    vec3 f = p - i;
     float d = 1.0; // Initial distance (for min distance to feature points)
 
     for (int x = -num_cells; x <= num_cells; ++x) {
         for (int y = -num_cells; y <= num_cells; ++y) {
             for (int z = -num_cells; z <= num_cells; ++z) {
                 vec3  cell   = vec3(float(x), float(y), float(z));
-                vec3  point  = cell + vec3(noise_rand(i + cell),
-                                        noise_rand(i + cell + vec3(42.0, 17.0, 23.0)),
-                                        noise_rand(i + cell + vec3(23.0, 31.0, 51.0)));
+                vec3  point  = cell + vec3(
+                                        noise_hash(i + cell, seed).x,
+                                        noise_hash(i + cell + vec3(42.0, 17.0, 23.0), seed).y,
+                                        noise_hash(i + cell + vec3(23.0, 31.0, 51.0), seed).z);
                 vec3  offset = point - f;
                 float len    = length(offset);
                 d = min(d, len);
@@ -50,35 +53,27 @@ float noise_worley(vec3 p, int num_cells) {
 }
 
 // 4D Worley Noise function
-float noise_worley(vec4 p, int num_cells) {
-    // Grid cell dimensions
+float noise_worley(vec4 p, int num_cells, uint seed) {
     float cell_size = 1.0 / float(num_cells);
 
-    // Compute cell coordinates
     vec4 cell_coords = floor(p / cell_size);
-
-    // Compute the local position within the cell
     vec4 local_pos = fract(p / cell_size);
 
     float min_dist = 1.0;
 
-    // Loop over the neighboring cells
     for (int x = -1; x <= 1; ++x) {
         for (int y = -1; y <= 1; ++y) {
             for (int z = -1; z <= 1; ++z) {
                 for (int w = -1; w <= 1; ++w) {
-                    vec4 neighbor_cell = vec4(x, y, z, w);
+                    vec4 neighbor_cell = vec4(float(x), float(y), float(z), float(w));
                     vec4 neighbor_coords = cell_coords + neighbor_cell;
 
-                    // Randomize the position within the neighboring cell
-                    vec4 random_offset = vec4(fract(sin(dot(neighbor_coords, vec4(12.9898, 78.233, 37.719, 4.581))) * 43758.5453));
-
-                    // Compute the distance to the random point in the neighboring cell
-                    vec4 offset_pos = neighbor_cell * cell_size + random_offset;
-                    vec4 diff = p - offset_pos;
+                    // Corrected hashing with dot product before noise_hash
+                    float hashed = noise_hash(dot(neighbor_coords, vec4(12.9898, 78.233, 37.719, 4.581)), seed).x;
+                    vec4 random_offset = vec4(fract(sin(hashed) * 43758.5453));
+                    vec4 offset_pos = neighbor_cell * cell_size + random_offset * cell_size;
+                    vec4 diff = (p / cell_size) - offset_pos;
                     float dist = length(diff);
-
-                    // Update the minimum distance
                     min_dist = min(min_dist, dist);
                 }
             }
@@ -87,5 +82,6 @@ float noise_worley(vec4 p, int num_cells) {
 
     return min_dist;
 }
+
 
 #endif
