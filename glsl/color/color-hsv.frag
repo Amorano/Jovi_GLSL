@@ -4,7 +4,7 @@
 
 #include .lib/convert.lib
 
-uniform sampler2D image; //                    | RGB(A) image
+uniform sampler2D image; //                  | RGB(A) image
 uniform vec3 HSV;        // 0.,1.,1.;0;1;0.1 | Adjust the Hue, Saturation or Value
 
 void mainImage(out vec4 fragColor, vec2 fragCoord) {

@@ -1,7 +1,7 @@
 aenum
 git+https://github.com/cozy-comfyui/cozy_comfyui@main#egg=cozy_comfyui
 glfw
-numpy<2
+numpy>=1.25.0
 opencv-contrib-python
 PyOpenGL
 PyOpenGL-accelerate; python_version < '3.12'
