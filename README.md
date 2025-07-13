@@ -44,6 +44,9 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
+**2025/07/13** @1.1.39:
+* fix for first enum not being indexed as `INT`
+
 **2025/07/13** @1.1.38:
 * allow numpy>=1.25.0
 

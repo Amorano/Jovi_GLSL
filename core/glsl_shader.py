@@ -324,6 +324,8 @@ class GLSLShader:
 
                 uk = (uk, p_loc)
                 if uk not in self.__uniform_state or self.__uniform_state[uk] != val:
+                    if p_type in ['int', 'ivec2', 'ivec3', 'ivec4']:
+                        val = [int(v) for v in val]
                     LAMBDA_UNIFORM[p_type](p_loc, *val)
                     self.__uniform_state[uk] = val
 
