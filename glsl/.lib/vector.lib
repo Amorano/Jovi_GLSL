@@ -43,4 +43,16 @@ vec2 vec_rotate2(vec2 v, float angle) {
     );
 }
 
+float vec_max(vec2 v) {
+    return max(v.x, v.y);
+}
+
+float vec_max(vec3 v) {
+  return max(max(v.x, v.y), v.z);
+}
+
+float vec_max(vec4 v) {
+  return max(max(max(v.x, v.y), v.z), v.w);
+}
+
 #endif

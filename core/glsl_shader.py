@@ -1,7 +1,7 @@
 """ Jovi_GLSL - GLSL Shader """
 
 import sys
-from typing import Any, Dict, Tuple
+from typing import Any
 from enum import Enum, EnumMeta as EnumType
 
 import cv2
@@ -69,7 +69,7 @@ class GLSLShader:
         self.__glsl_manager = GLSLManager()
         self.__glsl_manager.register_shader(node, self)
 
-        self.__size: Tuple[int, int] = (IMAGE_SIZE_MIN, IMAGE_SIZE_MIN)
+        self.__size: tuple[int, int] = (IMAGE_SIZE_MIN, IMAGE_SIZE_MIN)
         self.__textures = {}
         self.__uniform_state = {}
 
@@ -172,7 +172,7 @@ class GLSLShader:
             logger.debug(fragment_raw)
             raise CompileException(f"shader compilation failed: {str(e)}")
 
-    def __cleanup(self):
+    def __cleanup(self) -> None:
         """Explicit cleanup of OpenGL resources"""
         if hasattr(self, '_cleanup_called'):
             return
@@ -208,14 +208,14 @@ class GLSLShader:
 
         self.__glsl_manager.unregister_shader(self)
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Cleanup during garbage collection"""
         try:
             self.__cleanup()
         except:
             pass
 
-    def render(self, coreVar: Dict[str, Any], **kw) -> np.ndarray:
+    def render(self, coreVar: dict[str, Any], **kw) -> np.ndarray:
         glfw.make_context_current(self.__window)
         gl.glUseProgram(self.__program)
 

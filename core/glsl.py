@@ -2,7 +2,7 @@
 
 import re
 import sys
-from typing import Any, Dict, Tuple
+from typing import Any
 
 from comfy.utils import ProgressBar
 
@@ -39,7 +39,7 @@ RE_SHADER_META = re.compile(r"^\/\/\s?([A-Za-z_]{3,}):\s?(.+)$", re.MULTILINE)
 # === SUPPORT ===
 # ==============================================================================
 
-def shader_meta(shader: str) -> Dict[str, Any]:
+def shader_meta(shader: str) -> dict[str, Any]:
     ret = {}
     for match in RE_SHADER_META.finditer(shader):
         key, value = match.groups()
@@ -67,7 +67,7 @@ def load_file_glsl(fname: str) -> str:
             raise CompileException(f"File not found: {file_path}")
 
         # replace #include directives with their content
-        def replace_include(match):
+        def replace_include(match) -> str:
             lib_path = ROOT_GLSL / match.group(1)
             if lib_path not in include:
                 return scan_include(lib_path, idx+1)
@@ -77,7 +77,7 @@ def load_file_glsl(fname: str) -> str:
 
     return scan_include(fname)
 
-def import_dynamic() -> Tuple[str,...]:
+def import_dynamic() -> tuple[str,...]:
     ret = []
     sort = 5000
     root = str(ROOT_GLSL)
