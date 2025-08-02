@@ -17,10 +17,15 @@ float sdf_boxRound(vec2 p, vec2 s, float r);
 
 float sdf_ellipse(vec2 p, vec2 r, float s);
 float sdf_circle(vec2 p, float r);
+float sdf_sphere(vec3 p, float r);
+
 float sdf_ring(vec2 p, float r, float width);
+float sdf_torus( vec3 p, vec2 t );
+
 float sdf_capsule(vec2 p, vec2 a, vec2 b, float r);
 float sdf_cylinder(vec3 p, float r, float h);
-float sdf_sphere(vec3 p, float r);
+
+float sdf_plane( vec3 p, vec4 n );
 
 float sdf_polygon(vec2 p, vec2 center, float r, int sides, float starFactor);
 float sdf_polygon(vec2 p, int vertices, float s);
@@ -32,6 +37,7 @@ float sdf_heart(vec2 p);
 // SUPPORT FUNCTIONS
 //------------------------------------------------------------------------------
 
+float sdf_smoothedge(float u, float v);
 vec3 sdf_repeat(vec3 p, vec3 c);
 float sdf_union(float d1, float d2);
 float sdf_unionSmooth(float a, float b, float k);
@@ -46,14 +52,6 @@ vec3 sdf_gradient(vec3 pos);
 
 bool ray_intersection_aabb(vec3 o, vec3 dir, vec3 bmin, vec3 bmax, inout vec2 e);
 bool ray_marching(vec3 o, vec3 dir, inout float depth, inout vec3 n);
-
-//------------------------------------------------------------------------------
-// SMOOTH
-//------------------------------------------------------------------------------
-
-float smoothedge(float u, float v) {
-    return smoothstep(0.0, 1.0 / u, v);
-}
 
 //------------------------------------------------------------------------------
 // SHAPE
@@ -93,14 +91,24 @@ float sdf_circle(vec2 p, float r) {
     return length(p) - r;
 }
 
+// Computes the signed distance from a point to a sphere
+float sdf_sphere(vec3 p, float r) {
+    return length(p) - r;
+}
+
 float sdf_ring(vec2 p, float r, float width) {
   return abs(length(p) - r * 0.5) - width;
 }
 
+float sdf_torus( vec3 p, vec2 t ) {
+  vec2 q = vec2(length(p.xy)- t.x, p.z);
+  return length(q) - t.y;
+}
+
 float sdf_capsule(vec2 p, vec2 a, vec2 b, float r) {
     vec2 pa = p - a, ba = b - a;
-    float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );
-    return length( pa - ba*h ) - r;
+    float h = clamp( dot(pa, ba) / dot(ba, ba), 0.0, 1.0 );
+    return length( pa - ba * h ) - r;
 }
 
 float sdf_cylinder(vec3 p, float r, float h) {
@@ -108,9 +116,8 @@ float sdf_cylinder(vec3 p, float r, float h) {
     return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
 }
 
-// Computes the signed distance from a point to a sphere
-float sdf_sphere(vec3 p, float r) {
-    return length(p) - r;
+float sdf_plane( vec3 p, vec4 n ) {
+   return dot( p, n.xyz ) + n.w;
 }
 
 float sdf_polygon(vec2 p, vec2 center, float r, int sides, float starFactor) {
@@ -160,6 +167,14 @@ float sdf_heart(vec2 p) {
     float y = p.y;
     float a = 1.0 - x * x - (5.0 * y / 4.0 - sqrt(abs(x))) * (5.0 * y / 4.0 - sqrt(abs(x)));
     return length(vec2(x, y - sqrt(abs(x))) - vec2(0.0, 0.5)) * (abs(a) - 0.5);
+}
+
+//------------------------------------------------------------------------------
+// SMOOTH
+//------------------------------------------------------------------------------
+
+float sdf_smoothedge(float v) {
+    return smoothstep(0.0, 1.0 / iResolution.x, v);
 }
 
 //------------------------------------------------------------------------------

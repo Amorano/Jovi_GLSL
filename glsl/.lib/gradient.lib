@@ -1,0 +1,38 @@
+#ifndef LIB_GRADIENT
+#define LIB_GRADIENT
+
+//------------------------------------------------------------------------------
+// GRADIENT
+//------------------------------------------------------------------------------
+
+// =============================================================================
+// PROTOTYPES
+// =============================================================================
+
+vec3 gradient_3(vec3 color1, vec3 color2, vec3 color3, float t);
+vec3 gradient_smooth(vec3 color1, vec3 color2, float t);
+vec3 gradient_radialvec3(vec3 center, vec3 edge, vec2 uv, vec2 center_pos);
+
+//------------------------------------------------------------------------------
+// GRADIENT
+//------------------------------------------------------------------------------
+
+vec3 gradient_3(vec3 color1, vec3 color2, vec3 color3, float t) {
+    t = clamp(t, 0.0, 1.0);
+    return t < 0.5 ?
+        mix(color1, color2, t * 2.0) :
+        mix(color2, color3, (t - 0.5) * 2.0);
+}
+
+vec3 gradient_smooth(vec3 color1, vec3 color2, float t) {
+    t = smoothstep(0.0, 1.0, t);
+    return mix(color1, color2, t);
+}
+
+// Creates a gradient in polar coordinates
+vec3 gradient_radialvec3 center, vec3 edge, vec2 uv, vec2 center_pos) {
+    float dist = length(uv - center_pos);
+    return mix(center, edge, smoothstep(0.0, 1.0, dist));
+}
+
+#endif

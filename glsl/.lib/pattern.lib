@@ -1,0 +1,44 @@
+#ifndef LIB_PATTERN
+#define LIB_PATTERN
+
+//------------------------------------------------------------------------------
+// PATTERN
+//------------------------------------------------------------------------------
+
+// =============================================================================
+// PROTOTYPES
+// =============================================================================
+
+float pattern_checker(vec2 uv, float scale);
+float pattern_checker2(vec2 uv, float scale);
+float pattern_halftone(vec2 uv, float value, float frequency, float angle);
+
+//------------------------------------------------------------------------------
+// PATTERN
+//------------------------------------------------------------------------------
+
+// Creates a checker pattern
+float pattern_checker(vec2 uv, float scale) {
+    vec2 pattern = floor(uv * scale);
+    return mod(pattern.x + pattern.y, 2.0);
+}
+
+float pattern_checker2(vec2 p)
+{
+   vec2 w = fwidth(p) + 0.001;
+   vec2 i = 2.0 * (abs(fract((p - 0.5 * w) * 0.5) - 0.5) - abs(fract((p + 0.5 * w) * 0.5) - 0.5)) / w;
+   return 0.5 - 0.5 * i.x * i.y;
+}
+
+// Simulates halftone dot pattern
+float pattern_halftone(vec2 uv, float value, float frequency, float angle) {
+    vec2 rotated = vec2(
+        cos(angle) * uv.x - sin(angle) * uv.y,
+        sin(angle) * uv.x + cos(angle) * uv.y
+    );
+    vec2 nearest = 2.0 * fract(frequency * rotated) - 1.0;
+    float dist = length(nearest);
+    return step(dist, 2.0 * value - 1.0);
+}
+
+#endif
