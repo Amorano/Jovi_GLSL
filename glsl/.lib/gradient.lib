@@ -11,7 +11,7 @@
 
 vec3 gradient_3(vec3 color1, vec3 color2, vec3 color3, float t);
 vec3 gradient_smooth(vec3 color1, vec3 color2, float t);
-vec3 gradient_radialvec3(vec3 center, vec3 edge, vec2 uv, vec2 center_pos);
+vec3 gradient_radial(vec3 center, vec3 edge, vec2 uv, vec2 center_pos);
 
 //------------------------------------------------------------------------------
 // GRADIENT
@@ -30,7 +30,7 @@ vec3 gradient_smooth(vec3 color1, vec3 color2, float t) {
 }
 
 // Creates a gradient in polar coordinates
-vec3 gradient_radialvec3 center, vec3 edge, vec2 uv, vec2 center_pos) {
+vec3 gradient_radial(vec3 center, vec3 edge, vec2 uv, vec2 center_pos) {
     float dist = length(uv - center_pos);
     return mix(center, edge, smoothstep(0.0, 1.0, dist));
 }

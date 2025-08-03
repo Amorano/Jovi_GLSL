@@ -204,10 +204,10 @@ class GLSLNodeDynamic(CozyImageNode):
 
         # parameter list first...
         data = {}
-        # if cls.PARAM is not None:
+        # default, min, max, step, metadata, tooltip
         # 1., 1., 1.; 0; 1; 0.01; rgb | End of the Range
         # ;;;; mask | mask image
-        # default, min, max, step, metadata, tooltip
+        # ;;;; rgb  | color with default (255, 255, 255, 255)
         for glsl_type, name, default, val_min, val_max, val_step, meta, tooltip in cls.PARAM:
             typ = PTYPE[glsl_type]
             params = {"default": None}
@@ -229,9 +229,14 @@ class GLSLNodeDynamic(CozyImageNode):
                             # this be an ENUM....
                             type_name = target_enum._member_names_
                             params['default'] = type_name[0]
-                    else:
+                    elif default != "":
                         d = default.split(',')
                         params['default'] = parse_value(d, typ, 0)
+                    elif meta is not None:
+                        if "rgba" in meta:
+                            params['default'] = [255,255,255,255]
+                        elif "rgb" in meta:
+                            params['default'] = [255,255,255]
 
                 def minmax(mm: str, what: str) -> str:
                     match glsl_type:
@@ -258,10 +263,13 @@ class GLSLNodeDynamic(CozyImageNode):
                     params['step'] = parse_value(val_step, EnumConvertType.FLOAT, d)
 
                 if meta is not None:
-                    if "rgb" in meta:
-                         params['rgb'] = True
-                    elif "linear" in meta:
+                    if "linear" in meta:
                         params['linear'] = True
+                    elif "rgb" in meta or "rgba" in meta:
+                        params['rgb'] = True
+                        params['mij'] = 0
+                        params['maj'] = 255
+                        params['step'] = 1
 
             if tooltip is not None:
                 params["tooltip"] = tooltip
@@ -310,8 +318,14 @@ class GLSLNodeDynamic(CozyImageNode):
 
             self.__glsl = GLSLShader(self, vertex, fragment)
 
+        defines = self.INPUT_TYPES()['optional']
         for k in variables.keys():
             variables[k] = parse_param(variables, k, EnumConvertType.ANY, None)
+            if defines[k][1].get('rgb', False):
+                ret = []
+                for v in variables[k]:
+                    ret.append([a/255.0 for a in v])
+                variables[k] = ret
             batch = max(batch, len(variables[k]))
 
         start_frame = iFrame[0]
