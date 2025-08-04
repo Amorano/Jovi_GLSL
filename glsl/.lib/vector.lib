@@ -1,6 +1,8 @@
 #ifndef LIB_VECTOR
 #define LIB_VECTOR
 
+#include .lib/const.lib
+
 //------------------------------------------------------------------------------
 // VECTOR
 //------------------------------------------------------------------------------
@@ -19,6 +21,22 @@
 // Compute the "negative dot product" of two 2D vectors
 float vec_ndot(in vec2 a, in vec2 b) {
     return a.x*b.x - a.y*b.y;
+}
+
+vec2 vec_rotation(vec2 uv, float angle) {
+    float cos_a = cos(angle * M_DEG2RAD);
+    float sin_a = sin(angle * M_DEG2RAD);
+    return vec2(
+        uv.x * cos_a - uv.y * sin_a,
+        uv.x * sin_a + uv.y * cos_a
+    );
+}
+
+mat2 vec_rotation(float angle) {
+    float rotate_rad = mod(angle, 360.) / 360.;
+    float cosAngle = cos(rotate_rad * M_TAU);
+    float sinAngle = sin(rotate_rad * M_TAU);
+    return mat2(cosAngle, -sinAngle, sinAngle, cosAngle);
 }
 
 // Creates a rotation matrix for pitch, yaw

@@ -300,16 +300,6 @@ class GLSLShader:
                 gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGBA32F, self.__size[0], self.__size[1], 0, gl.GL_RGBA, gl.GL_FLOAT, val)
                 gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR)
                 gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
-
-                # Set edge wrapping modes
-                for idx, text_wrap in enumerate([gl.GL_TEXTURE_WRAP_S, gl.GL_TEXTURE_WRAP_T]):
-                    if coreVar['edge'][idx] == EnumEdgeWrap.WRAP:
-                        gl.glTexParameteri(gl.GL_TEXTURE_2D, text_wrap, gl.GL_REPEAT)
-                    elif coreVar['edge'][idx] == EnumEdgeWrap.MIRROR:
-                        gl.glTexParameteri(gl.GL_TEXTURE_2D, text_wrap, gl.GL_MIRRORED_REPEAT)
-                    else:
-                        gl.glTexParameteri(gl.GL_TEXTURE_2D, text_wrap, gl.GL_CLAMP_TO_EDGE)
-
                 gl.glUniform1i(p_loc, texture_index)
             else:
                 if isinstance(p_value, EnumType):
@@ -328,6 +318,15 @@ class GLSLShader:
                         val = [int(v) for v in val]
                     LAMBDA_UNIFORM[p_type](p_loc, *val)
                     self.__uniform_state[uk] = val
+
+        # Set edge wrapping modes
+        for idx, text_wrap in enumerate([gl.GL_TEXTURE_WRAP_S, gl.GL_TEXTURE_WRAP_T]):
+            if coreVar['edge'][idx] == EnumEdgeWrap.WRAP:
+                gl.glTexParameteri(gl.GL_TEXTURE_2D, text_wrap, gl.GL_REPEAT)
+            elif coreVar['edge'][idx] == EnumEdgeWrap.MIRROR:
+                gl.glTexParameteri(gl.GL_TEXTURE_2D, text_wrap, gl.GL_MIRRORED_REPEAT)
+            else:
+                gl.glTexParameteri(gl.GL_TEXTURE_2D, text_wrap, gl.GL_CLAMP_TO_EDGE)
 
         gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.__fbo)
         matte = [c/255. for c in coreVar['matte']]

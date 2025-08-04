@@ -27,7 +27,7 @@ float sdf_cylinder(vec3 pos, float radius, float height);
 float sdf_plane(vec3 pos, vec4 norm);
 
 float sdf_polygon(vec2 pos, vec2 center, float radius, int sides, float starFactor);
-float sdf_polygon(vec2 pos, int vertices, float s);
+float sdf_polygon(vec2 pos, float size, int sides);
 
 float sdf_star(vec2 pos, float radius, float t);
 float sdf_heart(vec2 pos);
@@ -137,7 +137,7 @@ float sdf_polygon(vec2 pos, vec2 center, float radius, int sides, float starFact
         float edgeDistance = length(pos - closest);
 
         // Modulate the radius for star effect
-        float factor = 1.0 + starFactor * (mod(float(i), 2.0) * 2.0 - 1.0);
+        float factor = 1 + starFactor * (mod(float(i), 2.0) * 2.0 - 1.0);
         float distance = edgeDistance - radius * factor;
 
         // Update the minimum distance
@@ -146,10 +146,10 @@ float sdf_polygon(vec2 pos, vec2 center, float radius, int sides, float starFact
     return dist;
 }
 
-float sdf_polygon(vec2 pos, int vertices, float s) {
-    float a = atan(pos.x, pos.y) + 0.2;
-    float b = M_TAU / float(vertices);
-    return cos(floor(0.5 + a / b) * b - a) * length(pos) - s;
+float sdf_polygon(vec2 pos, float size, int sides) {
+    float a = atan(pos.x, pos.y);// + 0.2;
+    float b = M_TAU / float(sides);
+    return cos(floor(0.5 + a / b) * b - a) * length(pos) - size;
 }
 
 float sdf_star(vec2 pos, float radius, float t) {
@@ -180,6 +180,13 @@ float sdf_smoothedge(float v, bool invert) {
     return d;
 }
 
+vec4 sdf_blend(float point, sampler2D image, vec2 uv, vec4 color, bool invert) {
+    point = sdf_smoothedge(point, invert) * color.w;
+    vec4 col_a = texture(image, uv);
+    vec4 shape = vec4(color.xyz * point, 1.0);
+    return mix(col_a, shape, point);
+}
+
 // Union of two distances
 float sdf_union(float d1, float d2) {
     return min(d1, d2);
@@ -201,8 +208,8 @@ float sdf_difference(float d1, float d2) {
     return max(d1, -d2);
 }
 
-float sdf_hollow(float s, float thickness) {
-    return abs(s) - thickness;
+float sdf_hollow(float shape, float thickness) {
+    return abs(shape) - thickness;
 }
 
 vec3 sdf_hollow(vec3 shape, float radius) {
