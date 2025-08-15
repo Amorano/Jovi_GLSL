@@ -19,6 +19,9 @@
     "NORMAL BLEND (JOV_GL)": "Blend two Normal maps",
     "PIXELATE (JOV_GL)": "Pixelate input image",
     "POSTERIZE (JOV_GL)": "Reduce the pixel color data range",
+    "SHAPE: CAPSULE (JOV_GL)": "Create an capsule with adjustable ends",
+    "SHAPE: ELLIPSE (JOV_GL)": "Create an ellipse (circle too)",
+    "SHAPE: POLYGON (JOV_GL)": "Create an polygon of 3+ sides",
     "SOBEL (JOV_GL)": "Finds the edges of an image",
     "TRANSFORM (JOV_GL)": "Move, Rotate, Scale and Tile an image"
 }

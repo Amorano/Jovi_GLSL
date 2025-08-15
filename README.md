@@ -44,6 +44,14 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
+**2025/08/14** @1.1.40:
+* SHAPE nodes: Polygon, Ellipse, Capsule
+* clean up type hints
+* checker2 function
+* cleaner defaults for meta: rgb
+* sdf vars explained better
+* rgb meta requires no defaults for use (255, 255, 255, 255)
+
 **2025/07/13** @1.1.39:
 * fix for first enum not being indexed as `INT`
 

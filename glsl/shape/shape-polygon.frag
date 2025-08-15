@@ -18,7 +18,8 @@ uniform bool invert;      //                           | invert the shape
 void mainImage(out vec4 fragColor, in vec2 fragCoord)
 {
     vec2 uv = fragCoord / iResolution.xy;
-    vec2 rotatedUV = vec_rotation(center - uv, rotate);
-    float d = sdf_polygon(rotatedUV, size * 0.5, sides);
+    vec2 rotatedUV = fract(center - uv);
+    rotatedUV = vec_rotation(rotatedUV - 0.5, rotate) + 0.5;
+    float d = sdf_polygon( rotatedUV, size, sides);
     fragColor = sdf_blend(d, imageA, uv, color, invert);
 }
