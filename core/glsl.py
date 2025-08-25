@@ -126,7 +126,7 @@ class GLSLNodeDynamic(CozyImageNode):
     CONTROL = []
     PARAM = []
 
-    # res, frame. framerate, time, matte, edge, seed, batch
+    # res, frame, framerate, time, matte, edge, seed, batch
 
     @classmethod
     def INPUT_TYPES(cls) -> dict:
@@ -364,3 +364,6 @@ class GLSLNodeDynamic(CozyImageNode):
             images.append(cv_to_tensor_full(img, matte))
             pbar.update_absolute(idx)
         return image_stack(images)
+
+class GLSLUserNode(GLSLNodeDynamic):
+    pass

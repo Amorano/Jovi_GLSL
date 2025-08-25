@@ -5,10 +5,10 @@
 
 #include .lib/vector.lib
 
-uniform sampler2D image; //                          | RGB(A) input to repeat
-uniform vec2 offset;     // 0.0,0.0; -0.5; 0.5; 0.01 | positional offset (-0.5..0.5)
-uniform float rotate;    // 0;;               ; 0.1  | rotation from 0..2pi
-uniform vec2 tile;       // 1.0,1.0; 1; 2048;  1     | repetitions on X and Y
+uniform sampler2D image; //                           | RGB(A) input to repeat
+uniform vec2 offset;     // 0.0,0.0; -0.5;  0.5; 0.01 | positional offset (-0.5..0.5)
+uniform float rotate;    // 0      ;     ;     ; 0.1  | rotation from 0..2pi
+uniform vec2 tile;       // 1.0,1.0;    1; 2048; 1    | repetitions on X and Y
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
