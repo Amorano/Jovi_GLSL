@@ -44,6 +44,9 @@ Please consider sponsoring me if you enjoy the results of my work, code or docum
 
 ## UPDATES
 
+**2025/08/25** @1.1.41:
+* quick formatting
+
 **2025/08/14** @1.1.40:
 * SHAPE nodes: Polygon, Ellipse, Capsule
 * clean up type hints
